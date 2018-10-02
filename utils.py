@@ -53,7 +53,7 @@ def find_target_images(target_species, images):
     maps = Vessel("data/label_maps.dat")
     label_map_inverse = maps.label_map_inverse
     target_images = []
-    for img in tqdm(images):
+    for img in images:
         codes = [
             label_map_inverse[a["plant"]]
             for a in img["annotations"]
@@ -121,6 +121,7 @@ def extract_balanced_tiles(
     path_to_annotations, target_species, tile_size=128, tiles_per_class=2000
 ):
     """Extract equal numbers of target species tiles and tiles from randomly selected species."""
+    print("> Extracting tiles.")
     maps = Vessel("data/label_maps.dat")
     data = Vessel(path_to_annotations)
     images = data.annotated_images
@@ -168,13 +169,13 @@ def extract_balanced_tiles(
     np.random.shuffle(idx)
     X = np.vstack((X_target, X_other))
     y = np.hstack((y_target, y_other))
-    return X[idx, :], y[idx]
+    print("> Extraction complete.")
+    return X[idx, :], y[idx].astype(int)
 
 
 if __name__ == "__main__":
 
-    for itr in range(10):
-        X, y = extract_balanced_tiles("data/annotated_images.dat", 28)
+    X, y = extract_balanced_tiles("data/annotated_images.dat", 28)
 
     # create_maps = False
     # if create_maps:
