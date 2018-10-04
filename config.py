@@ -12,7 +12,7 @@ if user == "mjl":
     THUMBNAIL_LOCATION = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/MNFI/THUMBNAILS"
     API_LOCATION = "/Users/mjl/dev/mnfi/argos/api"
     STATIC_LOCATION = "/Users/mjl/dev/mnfi/argos/dist"
-    MODEL_LOCATION = "/Users/mjl/dev/mnfi/argos/api/data/models"
+    MODEL_LOCATION = "/Users/mjl/dev/mnfi/argos_pipeline/data/models"
 elif user == "jgc":
     IMAGE_LOCATION = "/Users/jgc/dev/data/FLIGHTS"
     IMAGE_SERVER_LOCATION = "/Users/jgc/dev/data"

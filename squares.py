@@ -61,7 +61,10 @@ def create_rotated_pics(img, row, col, size, num_rotations):
 
         for itr in range(num_rotations):
             rotation_angle = angle_per_iteration * itr
-            rotated_image = imutils.rotate(img_, rotation_angle)
+            if rotation_angle > 0:
+                rotated_image = imutils.rotate(img_, rotation_angle)
+            else:
+                rotated_image = img_
             square = rotated_image[ctr_minus:ctr_plus, ctr_minus:ctr_plus, :]
             images.append(square)
 

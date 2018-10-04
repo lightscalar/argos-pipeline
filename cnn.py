@@ -1,5 +1,6 @@
 """Train a CNN to identify invasive species."""
 from config import *
+from utils import *
 
 from glob import glob
 from keras.callbacks import ModelCheckpoint
@@ -61,7 +62,6 @@ class CNN:
         model.add(BatchNormalization(axis=-1))
         model.add(Activation("relu"))
         model.add(MaxPooling2D(pool_size=(2, 2)))
-
         model.add(Flatten())
 
         # Full connected layer.
@@ -72,12 +72,12 @@ class CNN:
         model.add(BatchNormalization())
         model.add(Activation("relu"))
         model.add(Dropout(0.2))
-        model.add(Dense(2))
+        model.add(Dense(1))
         model.add(Activation("sigmoid"))
         model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["acc"])
         self.model = model
 
-    def train_network(self, target_species_code):
+    def train_network(self, target_species_code=28):
         """Train the neural network."""
         for itr in tqdm(range(self.nb_iter)):
             # Grab a subset of the total data.
@@ -92,4 +92,4 @@ if __name__ == "__main__":
 
     # Instantiate the CNN.
     cnn = CNN(model_name="phragmites_v1")
-    cnn.train_network(28) # 28 is code for Phragmites australis...
+    cnn.train_network(target_species_code=28)  # 28 is code for Phragmites australis...
