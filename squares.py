@@ -5,7 +5,7 @@ import imutils
 from ipdb import set_trace as debug
 
 
-def create_rotated_pics(img, row, col, size, num_rotations):
+def create_rotated_pics(img, row, col, size, num_rotations, jitter_amplitude=10):
     """Extract rotated tiles from an image."""
 
     images = []

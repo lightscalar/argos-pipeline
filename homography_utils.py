@@ -144,6 +144,7 @@ def match_image_to_map(image_filename, map_filename, make_picture=False):
             % (len(good_matches), MIN_MATCH_COUNT)
         )
         matches_mask = None
+        M = None
 
     # Draw the matches
     if make_picture:
@@ -189,6 +190,10 @@ class GeoReferencer(object):
         )
         self.ortho_obj = gdal.Open(map_filename)
         self.metadata = extract_info(image_filename)
+        if M is not None:
+            self.valid = True
+        else:
+            self.valid = False
 
     def image_shift(self, col, row):
         """Shift pixel into our mapping coordinate system."""

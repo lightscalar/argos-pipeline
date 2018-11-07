@@ -27,7 +27,7 @@ if __name__ == "__main__":
         os.makedirs(soi_map_location)
 
     # Process each image.
-    for path_to_image in tqdm(paths_to_images):
+    for path_to_image in tqdm(paths_to_images[30:]):
 
         # Keep track of image number.
         image_number = int(re.search(r"DJI_(\d+).JPG", path_to_image)[1])
@@ -35,15 +35,16 @@ if __name__ == "__main__":
         # Build the GeoReferencer!
         print("> Building GeoReferencer.")
         geo = GeoReferencer(path_to_image, path_to_map)
+        if not geo.valid:
+            continue
         print("> Complete.")
 
         # Compute probabilities.
-        prob_dict = get_probability_map(path_to_image, soi_code=14, tile_size=128)
-        map_prob_dict = convert_dict_to_map_coords(geo, prob_dict)
+        # prob_dict = get_probability_map(path_to_image, soi_code=14, tile_size=128)
 
         # Store the probabilities on disk.
         store = Vessel(
             filename=f"{soi_map_location}/IMG_{image_number:04d}_SOI_{target_soi:2d}.dat"
         )
-        store.prob_dict = map_prob_dict
+        store.map_prob_dict = convert_dict_to_map_coords(geo, store.prob_dict)
         store.save()
