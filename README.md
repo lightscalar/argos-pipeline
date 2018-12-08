@@ -23,7 +23,8 @@ site. The `images/` directory contains all high resolution images captured at
 the given site at the specified altitude. The `maps/` directory contains the
 high-resolution georeferenced map file, `map.tif`, as well as a
 lower-resolution map called `map_small.jpg`. As additional species maps are
-generated for this flight, these will also be stored at this location.
+generated for the flight they will be written to the corresponding `maps/`
+directory.
 
 As a concrete example, here is the location of the first image taken during the
 St. John"s 66 ft flight on 03 August 2018:
@@ -32,6 +33,11 @@ St. John"s 66 ft flight on 03 August 2018:
 ARGOS_ROOT/2018/08/03/st_johns_marsh/66/images/DJI_0001.JPG
 ```
 
+And the corresponding georeferenced map can be found at:
+
+```unix
+ARGOS_ROOT/2018/08/03/st_johns_marsh/66/maps.map.tif
+```
 
 ## Annotation Targets
 
