@@ -47,12 +47,13 @@ calling `get_targets()`.  The AT objects contain six fields: `scientific_name`,
 As an example:
 
 ```json
-{"scientific_name": "Achillea millifolium",
-"codes": ["AM"], 
-"common_name": "Yarrow",
-"physiognomy": "Forb",  
-"category": "Native",
-"color_code": "#0cb577"
+{
+    "scientific_name": "Achillea millifolium",
+    "codes": ["AM"], 
+    "common_name": "Yarrow",
+    "physiognomy": "Forb",  
+    "category": "Native",
+    "color_code": "#0cb577"
 }
 ```
 
