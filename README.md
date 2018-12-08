@@ -38,8 +38,8 @@ And the corresponding georeferenced map can be found at:
 ARGOS_ROOT/2018/08/03/st_johns_marsh/66/maps/map.tif
 ```
 
-Note that by convention all site names are lowercase and contain only letters
-and underscores; punctuation and spaces are verboten.
+Note that by convention all site names are lowercase and contain only letters,
+numbers, and underscores; punctuation and spaces are verboten.
 
 ## Annotation Targets
 
