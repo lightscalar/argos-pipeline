@@ -7,6 +7,7 @@ user = getpass.getuser()
 
 # Determine location of image data based on current user.
 if user == "mjl":
+    ARGOS_ROOT = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/ARGOS"
     IMAGE_LOCATION = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/MNFI/FLIGHTS"
     IMAGE_SERVER_LOCATION = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/MNFI"
     THUMBNAIL_LOCATION = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/MNFI/THUMBNAILS"

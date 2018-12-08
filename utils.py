@@ -1,9 +1,15 @@
 """Build tiles for a one vs many CNN classifier."""
-from vessel import Vessel
+from config import *
+from geo_utils import extract_info
 from squares import *
+from vessel import Vessel
 
+from datetime import datetime
+from glob import glob
 from ipdb import set_trace as debug
 from skimage.io import imread
+import shutil
+import re
 from tqdm import tqdm
 
 
@@ -173,9 +179,124 @@ def extract_balanced_tiles(
     return X[idx, :], y[idx].astype(int)
 
 
+def map_summaries():
+    """Return the map summary information."""
+    flights = []
+    years = glob(f"{ARGOS_ROOT}/*")
+    maps = []
+    for year in years:
+        months = sorted(glob(f"{year}/*"))
+        # print(year)
+        # print(months)
+        for month in months:
+            days = sorted(glob(f"{month}/*"))
+            for day in days:
+                sites = sorted(glob(f"{day}/*"))
+                for site in sites:
+                    altitudes = sorted(glob(f"{site}/*"))
+                    for altitude in altitudes:
+                        if altitude.split("/")[-1] != "obliques":
+                            images = sorted(glob(f"{altitude}/images/*.JPG"))
+                            images.sort(key=os.path.getmtime)
+                            nb_images = len(images)
+                            if nb_images > 0: # if no images, just why?
+                                first_meta = extract_info(images[0])
+                                last_meta = extract_info(images[-1])
+                                start = first_meta["date_time"]
+                                datetime_obj = datetime.strptime(
+                                    start, "%Y:%m:%d %I:%M:%S"
+                                )
+                                datetime_str = datetime_obj.strftime("%d %b %Y")
+                                smalldate = datetime_obj.strftime("%Y-%m-%d")
+                                time_str = datetime_obj.strftime("%I-%M%p")
+                                alt = altitude.split("/")[-1]
+                                sitename = site.split("/")[-1]
+                                year_ = year.split("/")[-1]
+                                month_ = month.split("/")[-1]
+                                day_ = day.split("/")[-1]
+                                end = last_meta["date_time"]
+                                path_to_map = f"{altitude}/maps/map_small.jpg"
+                                map_id = f"{year_}-{month_}-{day_}-{sitename}-{alt}"
+                            else:
+                                continue  # No images? Don't return this map.
+                            if len(glob(f"{altitude}/maps/map.tif")) > 0:
+                                maps.append(
+                                    {
+                                        "map_id": map_id,
+                                        "year": year_,
+                                        "month": month_,
+                                        "day": day_,
+                                        "site": sitename,
+                                        "altitude": alt,
+                                        "nb_images": nb_images,
+                                        "lat": f"{first_meta['img_lat']:.4f}",
+                                        "lon": f"{first_meta['img_lon']:.4f}",
+                                        "start": start,
+                                        "end": end,
+                                        "time": time_str.replace('-',':'),
+                                        "datetime": datetime_str,
+                                        "path_to_map": "/".join(
+                                            path_to_map.split("/")[-7:]
+                                        ),
+                                    }
+                                )
+    maps = sorted(maps, key=lambda x: x["start"])
+    return maps
+
+
+def parse_map_id(map_id):
+    """Extract map location/etc from a map id."""
+    rgx = r"(\d+)-(\d+)-(\d+)-(\w+)-(\d+)"
+    match = re.search(rgx, map_id)
+    if match is not None:
+        year = match[1]
+        month = match[2]
+        day = match[3]
+        site = match[4]
+        altitude = match[5]
+        return {
+            "error": False,
+            "year": year,
+            "month": month,
+            "day": day,
+            "site": site,
+            "altitude": altitude,
+        }
+    else:
+        return {"error": "Cannot parse given map ID."}
+
+
+def new_filename(old_filename):
+    """Construct a new filename based on old filename."""
+    regex = r"(DJI_)(\d+)"
+
+
+def fix_image_filenames(path_to_images):
+    """Let's fix the filenames of images for folders with more than 1000 images."""
+    images = glob(f"{path_to_images}/*.JPG")
+    rgx = r"(DJI_)(\d+)"
+    for img in images:
+        fn = img.split("/")[-1]
+        if len(fn) > 12:
+            scan = re.search(rgx, fn)
+            if scan is not None:
+                new_image_number = 1000 + int(scan[2])
+                new_image_name = f"DJI_{new_image_number:04d}.JPG"
+                path_to_new_image = f"{path_to_images}/{new_image_name}"
+                shutil.move(img, path_to_new_image)
+
+
 if __name__ == "__main__":
 
-    X, y = extract_balanced_tiles("data/annotated_images.dat", 28)
+    # DEPOT = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/MNFI/FLIGHTS"
+    # date = "2018.08.03"
+    # location = "St Johns Marsh (66)"
+    # location = "Algonac State Park (66)"
+    # path_to_images = f"{DEPOT}/{date}/{location}"
+    # fix_image_filenames(path_to_images)
+    maps = map_summaries()
+
+    # X, y = extract_balanced_tiles("data/annotated_images.dat", 28)
 
     # create_maps = False
     # if create_maps:

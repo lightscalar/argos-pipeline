@@ -11,10 +11,11 @@ import numpy as np
 map_dir = "maps"
 date = "2018.08.03"
 location = "St_Johns_Marsh_(66)"
+location = "Algonac_State_Park_(66)"
 
 maps = glob(f"{map_dir}/{date}/{location}/*.tif")
-path_to_geo_map = maps[2]
-path_to_density_map = "test.png"
+path_to_geo_map = maps[0]
+path_to_density_map = "algonac_buckthorn.png"
 
 # Load the density map.
 img = plt.imread(path_to_density_map)
@@ -23,7 +24,7 @@ img = plt.imread(path_to_density_map)
 gtiff_driver = gdal.GetDriverByName("GTiff")
 
 # Make a new geotiff file.
-out_ds = gtiff_driver.Create("geo_density.tif", img.shape[1], img.shape[0], 3, 1)
+out_ds = gtiff_driver.Create("algonac_state_park_buckthorn.tif", img.shape[1], img.shape[0], 3, 1)
 
 # Crack open the original georeferenced image.
 ds = gdal.Open(path_to_geo_map)

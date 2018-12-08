@@ -4,6 +4,7 @@ from vessel import Vessel
 from exiftool import ExifTool
 import geomag
 from geopy.distance import distance
+from ipdb import set_trace as debug
 import numpy as np
 
 
@@ -57,6 +58,7 @@ def extract_info(image_file):
     data["img_lon"] = metadata["Composite:GPSLongitude"]
     data["img_width"] = metadata["File:ImageWidth"]
     data["img_height"] = metadata["File:ImageHeight"]
+    data["date_time"] = metadata["EXIF:DateTimeOriginal"]
     return data
 
 

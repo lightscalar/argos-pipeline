@@ -15,10 +15,12 @@ if __name__ == "__main__":
     DEPOT = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/MNFI/FLIGHTS"
     date = "2018.08.03"
     location = "St Johns Marsh (66)"
+    location = "Algonac State Park (66)"
     paths_to_images = glob(f"{DEPOT}/{date}/{location}/DJI*.JPG")
 
     # Define the sitemap to use.
-    map_location = "St Johns Marsh (66)".replace(" ", "_")
+    # map_location = "St Johns Marsh (66)".replace(" ", "_")
+    map_location = "Algonac State Park (66)".replace(" ", "_")
     path_to_map = f"maps/{date}/{map_location}/map_medium.tif"
 
     # Define SOI storage space.
@@ -27,10 +29,14 @@ if __name__ == "__main__":
         os.makedirs(soi_map_location)
 
     # Process each image.
-    for path_to_image in tqdm(paths_to_images[30:]):
+    for path_to_image in tqdm(paths_to_images):
 
         # Keep track of image number.
-        image_number = int(re.search(r"DJI_(\d+).JPG", path_to_image)[1])
+        try:
+            image_number = int(re.search(r"DJI_(\d+).JPG", path_to_image)[1])
+        except:
+            # Need to better handle duplicate numbers.
+            continue
 
         # Build the GeoReferencer!
         print("> Building GeoReferencer.")
@@ -39,7 +45,7 @@ if __name__ == "__main__":
             continue
         print("> Complete.")
 
-        # Compute probabilities.
+        # Compute probabilities (or not, if we're just adding georeference information)
         # prob_dict = get_probability_map(path_to_image, soi_code=14, tile_size=128)
 
         # Store the probabilities on disk.

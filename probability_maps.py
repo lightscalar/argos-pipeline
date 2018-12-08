@@ -16,6 +16,7 @@ import numpy as np
 from PIL import Image
 from scipy.stats import gaussian_kde
 from skimage.io import imread
+import re
 from tqdm import tqdm
 
 
@@ -92,7 +93,7 @@ def plot_density(path_to_image, prob_dict, kde_interval=16, prob_threshold=0.50)
     mycmap = transparent_cmap(plt.cm.plasma)
 
     # Find row/cols with target species.
-    tgt_rows, tgt_cols = map_to_lists(prob_dict, 0.999)
+    tgt_rows, tgt_cols = map_to_lists(prob_dict, 0.90)
     tgt_rows, tgt_cols = get_random_subset(tgt_rows, tgt_cols)
 
     # Open the target image.
@@ -116,7 +117,8 @@ def plot_density(path_to_image, prob_dict, kde_interval=16, prob_threshold=0.50)
     fig, ax = plt.subplots(1, 1)
     fig.set_size_inches(width/220, height/220)
     ax.imshow(I)
-    cb = ax.contourf(axes[0], axes[1], pdf, 5, cmap=mycmap, antialiased=True)
+    cb = ax.contourf(axes[0], axes[1], pdf, 15, cmap=mycmap, antialiased=True)
+    # cb = 0
     # cb = ax.contourf(
     #     axes[0],
     #     axes[1],
@@ -198,6 +200,7 @@ if __name__ == "__main__":
     # Get the overall map.
     date = "2018.08.03"
     location = "St Johns Marsh (66)".replace(" ", "_")
+    location = "Algonac State Park (66)".replace(" ", "_")
     path_to_map = f"maps/{date}/{location}/map_medium.tif"
     soi_map_location = f'data/soi_map/{date}/{location.replace(" ", "_")}'
     # geo = GeoReferencer(path_to_image, path_to_map)
@@ -206,6 +209,10 @@ if __name__ == "__main__":
     soi_list = glob(f"{soi_map_location}/*.dat")
     master_prob_dict = {}
     for path_to_soi in tqdm(soi_list):
+        if re.search(r'_28.', path_to_soi) is None:
+            continue
+        else:
+            debug()
         vsl = Vessel(path_to_soi)
         if "map_prob_dict" in vsl.keys:
             prob_dict = vsl.map_prob_dict
