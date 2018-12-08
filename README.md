@@ -92,8 +92,8 @@ into the database, and have the following format:
 
 ```json
 {
-    "geolocation": (-83.48602, 43.70615, 137.464798), 
-    "latlon": (43.70615, -83.48602),  
+    "geolocation": [-83.48602, 43.70615, 137.464798], 
+    "latlon": [43.70615, -83.48602],  
     "name": "LS 08-06-2018 10:26:53", 
     "code": "LS",           
     "symbol": "Flag, Blue",  
