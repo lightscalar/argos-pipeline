@@ -45,9 +45,8 @@ and underscores; punctuation and spaces are verboten.
 ## Annotation Targets
 
 Annotation targets include plant species that the ARGOS system will learn to
-classify, including plant targets such as *Frangula alnus*, but also
-non-biological features such as sand, water, rocks, and man-made features such
-as asphalt.
+classify, such as *Frangula alnus*, but also non-biological features such as
+sand, water, rocks, and man-made features such as asphalt.
 
 Viable Annotation Targets (ATs) are stored in the MongoDB database in the
 `targets` collection. They are available via the `database.py` module by
@@ -97,7 +96,7 @@ into the database, and have the following format:
     "name": "LS 08-06-2018 10:26:53", 
     "code": "LS",           
     "symbol": "Flag, Blue",  
-    "datetime": "2018-08-06T14:26:48Z",
+    "datetime": "2018-08-06T14:26:48Z"
 }
 ```
 
