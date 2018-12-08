@@ -7,9 +7,10 @@ Species (ARGOS) processing pipeline.
 ## File Structure
 
 The ARGOS systems presumes that data is stored according to a very particular
-file structure.  The `config.py` file defines the `ARGOS_ROOT` variable, which
-specifies the top of the ARGOS file system. All data is then arranged according
-to the following format:
+file structure. The `config.py` file defines the `ARGOS_ROOT` variable, which
+specifies the top of the ARGOS file system. This allows the system to easily
+run on multiple systems. All data is then arranged according to the following
+schema:
 
 ```unix
 ARGOS_ROOT/year/month/day/site_name/obliques
@@ -32,5 +33,14 @@ ARGOS_ROOT/2018/08/03/st_johns_marsh/66/images/DJI_0001.JPG
 ```
 
 
+## Annotation Targets
+
+Annotation targets include plant species that the ARGOS system should learn to
+classify, including plant targets such as *Frangula alnus*, but also other features
+such as sand, water, rocks, and man-made features such as asphalt.
+
+## API
+
+The ARGOS API provides
 
 
