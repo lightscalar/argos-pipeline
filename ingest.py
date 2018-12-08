@@ -25,11 +25,11 @@ def extract_ground_truth(shape_file="truth/CZM_UAV_WAYPOINTS_2018.shp"):
     truths = []
     for shape in shapes:
         truth = {}
-        truth["geolocation"] = shape["geometry"]["coordinates"]
-        truth["latlon"] = (
+        truth["geolocation"] = list(shape["geometry"]["coordinates"])
+        truth["latlon"] = [
             shape["geometry"]["coordinates"][1],
             shape["geometry"]["coordinates"][0],
-        )
+        ]
         truth["name"] = shape["properties"]["Name"]
         truth["code"] = re.search(REG_EXP, truth["name"])[1]
         truth["symbol"] = shape["properties"]["Symbol"]
