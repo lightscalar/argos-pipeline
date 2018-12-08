@@ -92,12 +92,12 @@ into the database, and have the following format:
 
 ```json
 {
-    'geolocation': (-83.48602, 43.70615, 137.464798), 
-    'latlon': (43.70615, -83.48602),  
-    'name': 'LS 08-06-2018 10:26:53', 
-    'code': 'LS',           
-    'symbol': 'Flag, Blue',  
-    'datetime': '2018-08-06T14:26:48Z',
+    "geolocation": (-83.48602, 43.70615, 137.464798), 
+    "latlon": (43.70615, -83.48602),  
+    "name": "LS 08-06-2018 10:26:53", 
+    "code": "LS",           
+    "symbol": "Flag, Blue",  
+    "datetime": "2018-08-06T14:26:48Z",
 }
 ```
 
