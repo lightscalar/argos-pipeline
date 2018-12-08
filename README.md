@@ -57,7 +57,8 @@ As an example:
 }
 ```
 
-
+Categories can be, `Invasive`, `Native`, `Natural Feature`, or `Man-made Feature`. Physiognomy 
+includes `['Forb', 'Graminoid', 'Shrub', 'Tree', 'N/A']`.
 
 ## API
 
