@@ -26,7 +26,7 @@ lower-resolution map called `map_small.jpg`. As additional species maps are
 generated for this flight, these will also be stored at this location.
 
 As a concrete example, here is the location of the first image taken during the
-St. John's 66 ft flight on 03 August 2018:
+St. John"s 66 ft flight on 03 August 2018:
 
 ```unix
 ARGOS_ROOT/2018/08/03/st_johns_marsh/66/images/DJI_0001.JPG
@@ -38,6 +38,25 @@ ARGOS_ROOT/2018/08/03/st_johns_marsh/66/images/DJI_0001.JPG
 Annotation targets include plant species that the ARGOS system should learn to
 classify, including plant targets such as *Frangula alnus*, but also other features
 such as sand, water, rocks, and man-made features such as asphalt.
+
+Viable Annotation Targets (ATs) are stored in the MongoDB database in the
+`targets` collection. They are available via the `database.py` module by
+calling `get_targets()`.  The AT objects contain six fields: `scientific_name`,
+`codes`, `common_name`, `physiognomy`, `category`, and `color_code`.
+
+As an example:
+
+```json
+{"scientific_name": "Achillea millifolium",
+"codes": ["AM"], 
+"common_name": "Yarrow",
+"physiognomy": "Forb",  
+"category": "Native",
+"color_code": "#0cb577"
+}
+```
+
+
 
 ## API
 
