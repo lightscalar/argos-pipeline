@@ -35,9 +35,10 @@ ARGOS_ROOT/2018/08/03/st_johns_marsh/66/images/DJI_0001.JPG
 
 ## Annotation Targets
 
-Annotation targets include plant species that the ARGOS system should learn to
-classify, including plant targets such as *Frangula alnus*, but also other features
-such as sand, water, rocks, and man-made features such as asphalt.
+Annotation targets include plant species that the ARGOS system will learn to
+classify, including plant targets such as *Frangula alnus*, but also
+non-biological features such as sand, water, rocks, and man-made features such
+as asphalt.
 
 Viable Annotation Targets (ATs) are stored in the MongoDB database in the
 `targets` collection. They are available via the `database.py` module by
@@ -57,9 +58,27 @@ As an example:
 }
 ```
 
-Categories include `['Invasive', 'Native', 'Natural Feature', or 'Man-made
-Feature']`. Possible values for physiognomy includes `['Forb', 'Graminoid',
-'Shrub', 'Tree', 'N/A']`.
+Categories include `['Invasive', 'Native', 'Natural Feature', 'Man-made
+Feature']`. Possible values for physiognomy include `['Forb', 'Graminoid',
+'Shrub', 'Tree', 'N/A']`. Codes are used to associate collected ground truth
+with a target. Color codes determine the color used during image annotation, as
+well as the color used to display ground truth points on maps and
+high-resolution images.
+
+In order to load anntoation targets into the database, run:
+
+```unix
+> python ingest.py
+```
+
+This will clear the database of existing ATs and insert new ones, as defined in
+the `ingest.py` and in the `truth/target_key.xlsx` file.  
+
+## Ground Truth
+
+Field collected ground truth is also loaded into the database via the
+`ingest.py` script. The ingest.py script will load all
+`cpg/dbf/prj/sbn/sbx/shp/shx` files located in the `truth/` directory.
 
 ## API
 

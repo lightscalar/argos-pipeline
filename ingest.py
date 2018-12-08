@@ -66,11 +66,20 @@ if __name__ == "__main__":
         "category": "Physical Feature",
         "color_code": "#8a6e45",
     }
+    rock = {
+        "scientific_name": "Rocky Rockinius",
+        "codes": ["ROCK"],
+        "common_name": "Rock",
+        "physiognomy": "N/A",
+        "category": "Physical Feature",
+        "color_code": "#ada587",
+    }
 
     # Add additional
     targets.append(water)
     targets.append(street)
     targets.append(sand)
+    targets.append(rock)
 
     # Add the plants to the database.
     target_collection.delete_many({})  # first get rid of all of them.
