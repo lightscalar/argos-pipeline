@@ -17,6 +17,7 @@ client = MongoClient()
 # Connect to the database.
 db = client.ARGOS  # database
 target_collection = db.targets
+ground_truth_collection = db.ground_truth
 
 
 def get_targets():

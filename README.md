@@ -74,7 +74,7 @@ with a target. Color codes determine the color used during image annotation, as
 well as the color used to display ground truth points on maps and
 high-resolution images.
 
-In order to load anntoation targets into the database, run:
+In order to load annotation targets into the database, run:
 
 ```unix
 > python ingest.py
@@ -86,8 +86,20 @@ the `ingest.py` and in the `truth/target_key.xlsx` file.
 ## Ground Truth
 
 Field collected ground truth is also loaded into the database via the
-`ingest.py` script. The ingest.py script will load all
-`cpg/dbf/prj/sbn/sbx/shp/shx` files located in the `truth/` directory.
+`ingest.py` script. The ingest.py script will load all the shape files
+available in the files located in the `truth/` directory. These are inserted
+into the database, and have the following format:
+
+```json
+{
+    'geolocation': (-83.48602, 43.70615, 137.464798), 
+    'latlon': (43.70615, -83.48602),  
+    'name': 'LS 08-06-2018 10:26:53', 
+    'code': 'LS',           
+    'symbol': 'Flag, Blue',  
+    'datetime': '2018-08-06T14:26:48Z',
+}
+```
 
 ## API
 

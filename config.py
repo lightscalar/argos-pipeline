@@ -1,5 +1,6 @@
 """Useful configuration parameters and constants."""
 import getpass
+from glob import glob
 
 
 # Find the current user.
@@ -9,6 +10,7 @@ user = getpass.getuser()
 if user == "mjl":
     ARGOS_ROOT = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/ARGOS"
     TARGET_FILE = "truth/target_key.xlsx"
+    TRUTH_FILES = glob("truth/*.shp")
     # IMAGE_LOCATION = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/MNFI/FLIGHTS"
     # IMAGE_SERVER_LOCATION = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/MNFI"
     # THUMBNAIL_LOCATION = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/MNFI/THUMBNAILS"
