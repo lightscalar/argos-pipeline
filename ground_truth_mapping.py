@@ -10,11 +10,33 @@ from PIL import Image
 
 def match_truth_to_target(truth, targets):
     """Augment the truth with scientific name, color code, etc."""
+    target_found = False
     for target in targets:
         if truth["code"] in target["codes"]:
             truth["scientific_name"] = target["scientific_name"]
             truth["common_name"] = target["common_name"]
-    return truth
+            truth["color_code"] = target["color_code"]
+            target_found = True
+    if target_found:
+        return truth
+    else:
+        return None
+
+
+def in_map(row, col, map_rows, map_cols):
+    """Determine if ground truth point is inside the specified map."""
+    return not (row < 0 or col < 0 or row > map_rows or col > map_cols)
+
+
+def find_unique_targets(nearby_truth_list):
+    """Make a list of all unique ground truth targets present."""
+    targets_ = []
+    unique_targets = []
+    for t in nearby_truth_list:
+        if t["scientific_name"] not in targets_:
+            targets_.append(t["scientific_name"])
+            unique_targets.append(t)
+    return unique_targets
 
 
 def place_ground_truth_on_map(map_obj):
@@ -39,7 +61,7 @@ def place_ground_truth_on_map(map_obj):
     map_lon, map_lat = pixel_to_coord(ds, ds.RasterXSize / 2, ds.RasterYSize / 2)
 
     # Find all ground truth nearby (nearest k).
-    _, nearby_truth = truth_tree.query([[map_lat, map_lon]], k=100)
+    _, nearby_truth = truth_tree.query([[map_lat, map_lon]], k=300)
 
     # Compile a list of ground truth attached to this map.
     targets = get_targets()
@@ -48,18 +70,47 @@ def place_ground_truth_on_map(map_obj):
         tru = ground_truth[truth_idx]
         lat, lon = tru["latlon"]
         col, row = coord_to_pixel(ds, lon, lat)
+        if not in_map(row, col, large_rows, large_cols):
+            break
         gt = {"col": col * col_convert, "row": row * row_convert, "code": tru["code"]}
         gt = match_truth_to_target(gt, targets)
-        nearby_truth_list.append(gt)
+        if gt is not None:
+            nearby_truth_list.append(gt)
 
-    return nearby_truth_list
+    unique_targets_present = find_unique_targets(nearby_truth_list)
+    return nearby_truth_list, unique_targets_present
 
 
 if __name__ == "__main__":
     import pylab as plt
 
+    plt.ion()
+    plt.close("all")
+
     # Place ground truth on a map.
     maps = map_summaries()
-    nearby_truth = place_ground_truth_on_map(maps[0])
-
-
+    nearby_truth, unique_targets_present = place_ground_truth_on_map(maps[1])
+    img = Image.open(prepend_argos_root(maps[1]["path_to_map"]))
+    plt.imshow(img)
+    for itr, truth in enumerate(nearby_truth):
+        color = truth["color_code"]
+        plt.plot(
+            truth["row"],
+            truth["col"],
+            "o",
+            markersize=5,
+            markerfacecolor=color,
+            markeredgecolor=color,
+        )
+    for itr, truth in enumerate(unique_targets_present):
+        color = truth["color_code"]
+        plt.plot(
+            truth["row"],
+            truth["col"],
+            "o",
+            markersize=5,
+            markerfacecolor=color,
+            markeredgecolor=color,
+            label=truth["scientific_name"],
+        )
+    plt.legend()
