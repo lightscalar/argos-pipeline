@@ -73,11 +73,14 @@ def place_ground_truth_on_map(map_obj):
         tru = ground_truth[truth_idx]
         lat, lon = tru["latlon"]
         col, row = coord_to_pixel(ds, lon, lat)
-        if small_map[col, row, :].sum() >= 3 * 255:
-            # This ground truth point is off the map...
-            continue
+        small_col = int(col * col_convert)
+        small_row = int(row * row_convert)
         if not in_map(row, col, large_rows, large_cols):
+            # This point is off the map; all others would be farther away, so break...
             break
+        if small_map[small_row, small_col, :].sum() >= 3 * 255:
+            # This ground truth point is not on actual imagery...
+            continue
         gt = {"col": col * col_convert, "row": row * row_convert, "code": tru["code"]}
         gt = match_truth_to_target(gt, targets)
         if gt is not None:
@@ -95,8 +98,9 @@ if __name__ == "__main__":
 
     # Place ground truth on a map.
     maps = map_summaries()
-    nearby_truth, unique_targets_present = place_ground_truth_on_map(maps[0])
-    img = plt.imread(prepend_argos_root(maps[0]["path_to_map"]))
+    map_idx = 0
+    nearby_truth, unique_targets_present = place_ground_truth_on_map(maps[map_idx])
+    img = plt.imread(prepend_argos_root(maps[map_idx]["path_to_map"]))
     plt.imshow(img)
     for itr, truth in enumerate(nearby_truth):
         color = truth["color_code"]
