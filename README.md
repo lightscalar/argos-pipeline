@@ -57,10 +57,16 @@ The `targets` collection stores descriptions of all valid Annotation Targets
 georeferenced ground truth. Finally, `annotations` organizes all manual tile
 annotations made via the user interface.
 
-Note also that when the `database` module is imported, targets, ground truth,
-and a so-called "truth-tree" is loaded into memory. These are used throughout
-the ARGOS software, and—particularly for the computation of the truth
-tree—pre-computing these objects can save a lot of time.
+Note also that when the `database` module is imported, `targets`,
+`ground_truth`, and a so-called `truth_tree` are loaded into memory. The
+`truth_tree` is a (ball tree)[https://en.wikipedia.org/wiki/Ball_tree], a
+metric tree that allows for very fast searches over points in multidimensional
+spaces, and which dramatically speeds up the association of ground truth points
+with maps and images.
+
+These objects are used throughout the ARGOS software, and—particularly for the
+computation of the truth tree—pre-computing these objects can save a lot of
+time.
 
 ## Maps
 
