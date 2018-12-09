@@ -41,6 +41,27 @@ ARGOS_ROOT/2018/08/03/st_johns_marsh/66/maps/map.tif
 Note that by convention all site names are lowercase and contain only letters,
 numbers, and underscores; punctuation and spaces are verboten.
 
+## Database
+
+ARGOS relies on a MongoDB database running on the local host. The database is
+named `ARGOS`, and it contains three collections:
+
+```unix
+targets
+ground_truth
+annotations
+```
+
+The `targets` collection stores descriptions of all valid Annotation Targets
+(see below). The `ground_truth` collection stores all field-collected,
+georeferenced ground truth. Finally, `annotations` organizes all manual tile
+annotations made via the user interface.
+
+Note also that when the `database` module is imported, targets, ground truth,
+and a so-called "truth-tree" is loaded into memory. These are used throughout
+the ARGOS software, and—particularly for the computation of the truth
+tree—pre-computing these objects can save a lot of time.
+
 ## Maps
 
 Maps...
@@ -76,7 +97,7 @@ with a target. Color codes determine the color used during image annotation, as
 well as the color used to display ground truth points on maps and
 high-resolution images.
 
-In order to load annotation targets into the database, run:
+In order to ingest annotation targets into the database, run:
 
 ```unix
 > python ingest.py
@@ -104,7 +125,9 @@ into the database, and have the following format:
 ```
 
 Ground truth needs to be mapped to images and maps in order to dislpay the
-location of important plants and features. This can be done
+location of important plants and features. In the case of georeferenced maps,
+this can be done using the `place_ground_truth_on_map` function, in the
+`ground_truth_mapping.py` module.
 
 ## API
 

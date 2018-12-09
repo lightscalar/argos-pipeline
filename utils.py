@@ -270,9 +270,9 @@ def parse_map_id(map_id):
         return {"error": "Cannot parse given map ID."}
 
 
-def new_filename(old_filename):
-    """Construct a new filename based on old filename."""
-    regex = r"(DJI_)(\d+)"
+# def new_filename(old_filename):
+#     """Construct a new filename based on old filename."""
+#     regex = r"(DJI_)(\d+)"
 
 
 def fix_image_filenames(path_to_images):
@@ -288,6 +288,11 @@ def fix_image_filenames(path_to_images):
                 new_image_name = f"DJI_{new_image_number:04d}.JPG"
                 path_to_new_image = f"{path_to_images}/{new_image_name}"
                 shutil.move(img, path_to_new_image)
+
+
+def prepend_argos_root(path):
+    """Augments a relative path with absolute path to ARGOS root."""
+    return f"{ARGOS_ROOT}/{path}"
 
 
 if __name__ == "__main__":

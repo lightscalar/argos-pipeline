@@ -19,8 +19,11 @@ def pixel_to_coord(ds, col, row):
 
     transform = osr.CoordinateTransformation(source, target)
     result = transform.TransformPoint(lon, lat)
+    lon = result[0]
+    lat = result[1]
 
-    return result[0], result[1]
+    # Returns: lon, lat
+    return lon, lat
 
 
 def coord_to_pixel(ds, lon, lat):
