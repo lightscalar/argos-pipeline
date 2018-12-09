@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     water = {
         "scientific_name": "H2O",
-        "codes": ["CR"],
+        "codes": ["H2O"],
         "common_name": "water",
         "physiognomy": "N/A",
         "category": "Physical Feature",

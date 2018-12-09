@@ -68,7 +68,12 @@ objects can save a lot of time.
 
 ## Maps
 
-ARGOS is concerned with producing maps.
+ARGOS is concerned with producing maps. We use two maps. The first is a 2
+inch/pixel resolution map in `TIF` format that is fully georeferenced; this map
+is used for building the detailed target species heat maps, etc. The second is
+a 20 inch/pixel resolution map in `JPG` format. This is used for web-display
+interfaces. As described above, all maps are stored in the directory
+corresponding to the date, site, and altitude of the flight.
 
 ## Annotation Targets
 

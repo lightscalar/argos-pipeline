@@ -6,6 +6,7 @@ from utils import prepend_argos_root, map_summaries
 
 from ipdb import set_trace as debug
 from PIL import Image
+import pylab as plt
 
 
 def match_truth_to_target(truth, targets):
@@ -13,6 +14,8 @@ def match_truth_to_target(truth, targets):
     target_found = False
     for target in targets:
         if truth["code"] in target["codes"]:
+            if "H2O" in target["codes"]:
+                debug()
             truth["scientific_name"] = target["scientific_name"]
             truth["common_name"] = target["common_name"]
             truth["color_code"] = target["color_code"]
@@ -46,8 +49,8 @@ def place_ground_truth_on_map(map_obj):
     path_to_map = prepend_argos_root(map_obj["path_to_map"])
 
     # Open small map to get size.
-    small_map = Image.open(path_to_map)
-    small_rows, small_cols = small_map.size
+    small_map = plt.imread(path_to_map)
+    small_rows, small_cols, _ = small_map.shape
 
     # Open georeference information on the map.
     ds = gdal.Open(path_to_geomap)
@@ -70,6 +73,9 @@ def place_ground_truth_on_map(map_obj):
         tru = ground_truth[truth_idx]
         lat, lon = tru["latlon"]
         col, row = coord_to_pixel(ds, lon, lat)
+        if small_map[col, row, :].sum() >= 3 * 255:
+            # This ground truth point is off the map...
+            continue
         if not in_map(row, col, large_rows, large_cols):
             break
         gt = {"col": col * col_convert, "row": row * row_convert, "code": tru["code"]}
@@ -89,14 +95,15 @@ if __name__ == "__main__":
 
     # Place ground truth on a map.
     maps = map_summaries()
-    nearby_truth, unique_targets_present = place_ground_truth_on_map(maps[1])
-    img = Image.open(prepend_argos_root(maps[1]["path_to_map"]))
+    nearby_truth, unique_targets_present = place_ground_truth_on_map(maps[0])
+    img = plt.imread(prepend_argos_root(maps[0]["path_to_map"]))
     plt.imshow(img)
     for itr, truth in enumerate(nearby_truth):
         color = truth["color_code"]
+        r, c = int(truth["row"]), int(truth["col"])
         plt.plot(
-            truth["row"],
             truth["col"],
+            truth["row"],
             "o",
             markersize=5,
             markerfacecolor=color,
@@ -104,9 +111,10 @@ if __name__ == "__main__":
         )
     for itr, truth in enumerate(unique_targets_present):
         color = truth["color_code"]
+        r, c = int(truth["row"]), int(truth["col"])
         plt.plot(
-            truth["row"],
             truth["col"],
+            truth["row"],
             "o",
             markersize=5,
             markerfacecolor=color,
