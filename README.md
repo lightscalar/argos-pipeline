@@ -103,6 +103,9 @@ into the database, and have the following format:
 }
 ```
 
+Ground truth needs to be mapped to images and maps in order to dislpay the
+location of important plants and features. This can be done
+
 ## API
 
 The ARGOS API provides access to images, etc.

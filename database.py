@@ -27,3 +27,8 @@ def get_targets():
     for target in target_list:
         target["_id"] = str(target["_id"])
     return target_list
+
+
+def get_ground_truth():
+    """Return all ground truth."""
+    return list(ground_truth_collection.find({}))

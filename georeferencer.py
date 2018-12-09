@@ -1,5 +1,4 @@
 """Find the latitude, longitude position of any pixel in a georeferenced tif file."""
-
 from osgeo import gdal, osr
 import numpy as np
 

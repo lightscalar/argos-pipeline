@@ -199,7 +199,7 @@ def map_summaries():
                             images = sorted(glob(f"{altitude}/images/*.JPG"))
                             images.sort(key=os.path.getmtime)
                             nb_images = len(images)
-                            if nb_images > 0: # if no images, just why?
+                            if nb_images > 0:  # if no images, just why?
                                 first_meta = extract_info(images[0])
                                 last_meta = extract_info(images[-1])
                                 start = first_meta["date_time"]
@@ -216,6 +216,7 @@ def map_summaries():
                                 day_ = day.split("/")[-1]
                                 end = last_meta["date_time"]
                                 path_to_map = f"{altitude}/maps/map_small.jpg"
+                                path_to_geomap = f"{altitude}/maps/map.tif"
                                 map_id = f"{year_}-{month_}-{day_}-{sitename}-{alt}"
                             else:
                                 continue  # No images? Don't return this map.
@@ -233,8 +234,11 @@ def map_summaries():
                                         "lon": f"{first_meta['img_lon']:.4f}",
                                         "start": start,
                                         "end": end,
-                                        "time": time_str.replace('-',':'),
+                                        "time": time_str.replace("-", ":"),
                                         "datetime": datetime_str,
+                                        "path_to_geomap": "/".join(
+                                            path_to_geomap.split("/")[-7:]
+                                        ),
                                         "path_to_map": "/".join(
                                             path_to_map.split("/")[-7:]
                                         ),
