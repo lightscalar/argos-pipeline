@@ -41,6 +41,10 @@ ARGOS_ROOT/2018/08/03/st_johns_marsh/66/maps/map.tif
 Note that by convention all site names are lowercase and contain only letters,
 numbers, and underscores; punctuation and spaces are verboten.
 
+## Maps
+
+Maps...
+
 ## Annotation Targets
 
 Annotation targets include plant species that the ARGOS system will learn to
