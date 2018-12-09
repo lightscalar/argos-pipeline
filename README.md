@@ -59,7 +59,7 @@ annotations made via the user interface.
 
 Note also that when the `database` module is imported, `targets`,
 `ground_truth`, and a so-called `truth_tree` are loaded into memory. The
-`truth_tree` is a (ball tree)[https://en.wikipedia.org/wiki/Ball_tree], a
+`truth_tree` is a [ball tree](https://en.wikipedia.org/wiki/Ball_tree), a
 metric tree that allows for very fast searches over points in multidimensional
 spaces, and which dramatically speeds up the association of ground truth points
 with maps and images.
