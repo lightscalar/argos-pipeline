@@ -151,12 +151,13 @@ The `/maps` endpoint returns an array of map objects, as defined above.
 ### GET /maps/<map_id>
 
 This endpoint returns a specific map object, as well as the associated ground
-truth information, and map image size:
+truth information and map image size:
 
 ```json
 {
     "map": target_map,
-    "ground_truth": unique_ground_truth_present,
+    "ground_truth": nearby_ground_truth,
+    "unique_truth": unique_ground_truth,
     "image_rows": 450,
     "image_cols": 658
 }
