@@ -87,7 +87,13 @@ def place_ground_truth_on_map(map_obj):
             nearby_truth_list.append(gt)
 
     unique_targets_present = find_unique_targets(nearby_truth_list)
-    return nearby_truth_list, unique_targets_present
+    package = {
+        "nearby_truth": nearby_truth_list,
+        "unique_truth": unique_targets_present,
+        "image_rows": small_rows,
+        "image_cols": small_col,
+    }
+    return package
 
 
 if __name__ == "__main__":
@@ -98,7 +104,7 @@ if __name__ == "__main__":
 
     # Place ground truth on a map.
     maps = map_summaries()
-    map_idx = 0
+    map_idx = 1
     nearby_truth, unique_targets_present = place_ground_truth_on_map(maps[map_idx])
     img = plt.imread(prepend_argos_root(maps[map_idx]["path_to_map"]))
     plt.imshow(img)
