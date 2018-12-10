@@ -53,10 +53,11 @@ class Map(Resource):
         return {
             "map": tgt_map,
             "nearby_truth": truth["nearby_truth"],
-            "ground_truth": truth["unique_truth"],
+            "unique_truth": truth["unique_truth"],
             "image_rows": truth["image_rows"],
             "image_cols": truth["image_cols"],
         }
+
 
 api.add_resource(Maps, "/maps", methods=["GET"])
 api.add_resource(Map, "/maps/<map_id>", methods=["GET"])

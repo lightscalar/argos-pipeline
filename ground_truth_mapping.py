@@ -79,7 +79,7 @@ def place_ground_truth_on_map(map_obj):
             # This point is off the map; all others would be farther away, so break...
             break
         if small_map[small_row, small_col, :].sum() >= 3 * 255:
-            # This ground truth point is not on actual imagery...
+            # This ground truth point is not on actual imagery, but in white buffer space.
             continue
         gt = {"col": col * col_convert, "row": row * row_convert, "code": tru["code"]}
         gt = match_truth_to_target(gt, targets)
@@ -87,11 +87,14 @@ def place_ground_truth_on_map(map_obj):
             nearby_truth_list.append(gt)
 
     unique_targets_present = find_unique_targets(nearby_truth_list)
+    unique_targets_present = sorted(
+        unique_targets_present, key=lambda x: x["scientific_name"]
+    )
     package = {
         "nearby_truth": nearby_truth_list,
         "unique_truth": unique_targets_present,
         "image_rows": small_rows,
-        "image_cols": small_col,
+        "image_cols": small_cols,
     }
     return package
 
@@ -105,7 +108,9 @@ if __name__ == "__main__":
     # Place ground truth on a map.
     maps = map_summaries()
     map_idx = 1
-    nearby_truth, unique_targets_present = place_ground_truth_on_map(maps[map_idx])
+    truths = place_ground_truth_on_map(maps[map_idx])
+    nearby_truth = truths["nearby_truth"]
+    unique_truth = truths["unique_truth"]
     img = plt.imread(prepend_argos_root(maps[map_idx]["path_to_map"]))
     plt.imshow(img)
     for itr, truth in enumerate(nearby_truth):
@@ -119,7 +124,7 @@ if __name__ == "__main__":
             markerfacecolor=color,
             markeredgecolor=color,
         )
-    for itr, truth in enumerate(unique_targets_present):
+    for itr, truth in enumerate(unique_truth):
         color = truth["color_code"]
         r, c = int(truth["row"]), int(truth["col"])
         plt.plot(

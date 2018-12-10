@@ -217,6 +217,7 @@ def map_summaries():
                                 end = last_meta["date_time"]
                                 path_to_map = f"{altitude}/maps/map_small.jpg"
                                 path_to_geomap = f"{altitude}/maps/map.tif"
+                                path_to_images = f"{altitude}/images"
                                 map_id = f"{year_}-{month_}-{day_}-{sitename}-{alt}"
                             else:
                                 continue  # No images? Don't return this map.
@@ -241,6 +242,9 @@ def map_summaries():
                                         ),
                                         "path_to_map": "/".join(
                                             path_to_map.split("/")[-7:]
+                                        ),
+                                        "path_to_images": "/".join(
+                                            path_to_images.split("/")[-6:]
                                         ),
                                     }
                                 )

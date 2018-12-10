@@ -84,7 +84,7 @@ sand, water, rocks, and man-made features such as asphalt.
 
 Viable Annotation Targets (ATs) are stored in the MongoDB database in the
 `targets` collection. They are available via the `database.py` module by
-calling `get_targets()`.  The AT objects contain six fields: `scientific_name`,
+calling `get_targets()`. The AT objects contain six fields: `scientific_name`,
 `codes`, `common_name`, `physiognomy`, `category`, and `color_code`.
 
 As an example:
@@ -92,9 +92,9 @@ As an example:
 ```json
 {
     "scientific_name": "Achillea millifolium",
-    "codes": ["AM"], 
+    "codes": ["AM"],
     "common_name": "Yarrow",
-    "physiognomy": "Forb",  
+    "physiognomy": "Forb",
     "category": "Native",
     "color_code": "#0cb577"
 }
@@ -114,7 +114,18 @@ In order to ingest annotation targets into the database, run:
 ```
 
 This will clear the database of existing ATs and insert new ones, as defined in
-the `ingest.py` and in the `truth/target_key.xlsx` file.  
+the `ingest.py` and in the `truth/target_key.xlsx` file. It will also scan the
+file structure for images that have not yet been ingested. As it finds new
+images, it will extract metadata, create an image object, and insert it into
+the database. The `ingest` script will not delete the contents of the `imagery`
+collection because metadata extraction is a relatively expensive process (~2
+minutes/flight).
+
+## Imagery
+
+As indicated above, images are stored at the lowest point in the directory
+structure. Individual image information, including geolocation information, is
+also stored in the MongoDB.
 
 ## Ground Truth
 
@@ -125,11 +136,11 @@ into the database, and have the following format:
 
 ```json
 {
-    "geolocation": [-83.48602, 43.70615, 137.464798], 
-    "latlon": [43.70615, -83.48602],  
-    "name": "LS 08-06-2018 10:26:53", 
-    "code": "LS",           
-    "symbol": "Flag, Blue",  
+    "geolocation": [-83.48602, 43.70615, 137.464798],
+    "latlon": [43.70615, -83.48602],
+    "name": "LS 08-06-2018 10:26:53",
+    "code": "LS",
+    "symbol": "Flag, Blue",
     "datetime": "2018-08-06T14:26:48Z"
 }
 ```
@@ -155,9 +166,9 @@ truth information and map image size:
 
 ```json
 {
-    "map": target_map,
-    "ground_truth": nearby_ground_truth,
-    "unique_truth": unique_ground_truth,
+    "map": target_map_object,
+    "ground_truth": nearby_ground_truth_list,
+    "unique_truth": unique_ground_truth_list,
     "image_rows": 450,
     "image_cols": 658
 }

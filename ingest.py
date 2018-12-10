@@ -1,6 +1,7 @@
 """Utilities for ingesting ground truth and annotation target information."""
 from config import *
 from database import *
+from utils import *
 
 import fiona
 import numpy as np
@@ -16,6 +17,15 @@ REG_EXP = r"(\w+)\s.*"
 np.random.seed(0)
 colors = list(sns.xkcd_rgb.keys())
 np.random.shuffle(colors)
+
+
+def extract_image_number(path_to_image):
+    """Grab the image number from the image name."""
+    rgx = r"DJI_(\d+).JPG"
+    file_name = path_to_image.split("/")[-1]
+    match = re.search(rgx, file_name)
+    if match is not None:
+        return match[1]
 
 
 def extract_ground_truth(shape_file="truth/CZM_UAV_WAYPOINTS_2018.shp"):
@@ -120,3 +130,27 @@ if __name__ == "__main__":
     # Wipe database and insert the ground truth.
     ground_truth_collection.delete_many({})
     ground_truth_collection.insert_many(ground_truths)
+
+    # Now ingest image data. Check to see if we need to.
+    maps = map_summaries()
+
+    for cmap in maps:
+        print('> Ingesting images for map {cmap["map_id"]}')
+        # Get a list of images.
+        path_to_images = prepend_argos_root(cmap["path_to_images"])
+        images = sorted(glob(f"{path_to_images}/*.JPG"))
+
+        for path_to_image in tqdm(images):
+            image_number = extract_image_number(path_to_image)
+            image_id = f"{cmap['map_id']}-IMG_{image_number}"
+            if get_image(image_id) is None:  # only insert new images.
+                info = extract_info(path_to_image)
+                image_obj = {
+                    "map_id": cmap["map_id"],
+                    "image_id": image_id,
+                    "lat": info["img_lat"],
+                    "lon": info["img_lon"],
+                    "height": info["img_height"],
+                    "width": info["img_width"],
+                }
+                imagery_collection.insert_one(image_obj)
