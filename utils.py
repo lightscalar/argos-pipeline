@@ -265,6 +265,28 @@ def map_summaries():
     return maps
 
 
+def parse_image_id(image_id):
+    """Extract info from the image ID."""
+    image_id_list = image_id.split("-")
+    map_id = "-".join(image_id_list[:-1])
+    year = image_id_list[0]
+    month = image_id_list[1]
+    day = image_id_list[2]
+    site = image_id_list[3]
+    altitude = image_id_list[4]
+    image_number = image_id_list[5]
+    return {
+        "error": False,
+        "map_id": map_id,
+        "year": int(year),
+        "month": int(month),
+        "day": int(day),
+        "site": site,
+        "altitude": int(altitude),
+        "image_number": image_number,
+    }
+
+
 def parse_map_id(map_id):
     """Extract map location/etc from a map id."""
     rgx = r"(\d+)-(\d+)-(\d+)-(\w+)-(\d+)"

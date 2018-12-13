@@ -57,13 +57,29 @@ def build_image_tree():
     return image_tree
 
 
-def nearby_images(lat, lon, max_number=10):
+def nearby_images(lat, lon, max_number=10, map_id=None):
     """Find images nearest to specified lat and lon."""
-    distances, image_list = global_image_tree.query(
-        np.array([lat, lon]).reshape(1, -1), k=max_number
-    )
-    image_list = image_list[0]
-    image_ids = [global_image_locations[idx]["image_id"] for idx in image_list]
+    if map_id is None:
+        # If we don't care what map these come from:
+        distances, image_list = global_image_tree.query(
+            np.array([lat, lon]).reshape(1, -1), k=max_number
+        )
+        image_list = image_list[0]
+        image_ids = [global_image_locations[idx]["image_id"] for idx in image_list]
+    else:
+        # Ensure we are only grabbing images from specified map.
+        distances, image_list = global_image_tree.query(
+            np.array([lat, lon]).reshape(1, -1), k=100
+        )
+        image_list = image_list[0]
+        for image in image_list:
+            image_info = parse_image_id(image['image_id'])
+            if image_info['map_id'] == map_id:
+                image_ids.append(image_id)
+            else:
+                continue
+            if len(image_ids) == max_number:
+                break
     return image_ids
 
 
