@@ -14,8 +14,6 @@ def match_truth_to_target(truth, targets):
     target_found = False
     for target in targets:
         if truth["code"] in target["codes"]:
-            if "H2O" in target["codes"]:
-                debug()
             truth["scientific_name"] = target["scientific_name"]
             truth["common_name"] = target["common_name"]
             truth["color_code"] = target["color_code"]
@@ -42,6 +40,20 @@ def find_unique_targets(nearby_truth_list):
     return unique_targets
 
 
+def convert_map_coord_to_lat_lon(col_fraction, row_fraction, map_id):
+    """Map specified col/row clicked on web map to lat/lon."""
+    map_obj = get_map(map_id)
+    geo_rows = map_obj["geo_rows"]
+    geo_cols = map_obj["geo_cols"]
+    # Scale web map coordinates to georeferenced map.
+    col = col_fraction * geo_cols
+    row = row_fraction * geo_rows
+    ds = gdal.Open(prepend_argos_root(map_obj["path_to_geomap"]))
+    # Convert to latitude and longitude.
+    map_lon, map_lat = pixel_to_coord(ds, col, row)
+    return map_lat, map_lon
+
+
 def place_ground_truth_on_map(map_obj):
     """Returns list of (row,col) coordinates for placement on small map."""
     # Note this assumes we've imported truth_tree and ground_truth from database.
@@ -64,13 +76,13 @@ def place_ground_truth_on_map(map_obj):
     map_lon, map_lat = pixel_to_coord(ds, ds.RasterXSize / 2, ds.RasterYSize / 2)
 
     # Find all ground truth nearby (nearest k).
-    _, nearby_truth = truth_tree.query([[map_lat, map_lon]], k=300)
+    _, nearby_truth = global_truth_tree.query([[map_lat, map_lon]], k=300)
 
     # Compile a list of ground truth attached to this map.
     targets = get_targets()
     nearby_truth_list = []
     for truth_idx in nearby_truth[0]:
-        tru = ground_truth[truth_idx]
+        tru = global_ground_truth[truth_idx]
         lat, lon = tru["latlon"]
         col, row = coord_to_pixel(ds, lon, lat)
         small_col = int(col * col_convert)

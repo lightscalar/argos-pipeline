@@ -1,6 +1,8 @@
 """Utilities for accessing the database, grabbing data, etc."""
 from config import *
+from database import *
 from geo_utils import distance_on_earth
+from utils import *
 
 from bson import ObjectId
 from datetime import datetime
@@ -34,12 +36,35 @@ def extract_image_number(path_to_image):
         return match[1]
 
 
+def get_image_locations():
+    """Get image locations from the database."""
+    return list(imagery_collection.find({}, {"image_id", "lat", "lon"}))
+
+
 def build_truth_tree():
     """Compute a BallTree object for all ground truth in the database."""
     truths = get_ground_truth()
     truth_locations = np.array([[t["latlon"][0], t["latlon"][1]] for t in truths])
     truth_tree = BallTree(truth_locations, metric=distance_on_earth)
     return truth_tree
+
+
+def build_image_tree():
+    """Compute a BallTree object for images in the database."""
+    images = get_image_locations()
+    image_locations = np.array([[img["lat"], img["lon"]] for img in images])
+    image_tree = BallTree(image_locations, metric=distance_on_earth)
+    return image_tree
+
+
+def nearby_images(lat, lon, max_number=10):
+    """Find images nearest to specified lat and lon."""
+    distances, image_list = global_image_tree.query(
+        np.array([lat, lon]).reshape(1, -1), k=max_number
+    )
+    image_list = image_list[0]
+    image_ids = [global_image_locations[idx]["image_id"] for idx in image_list]
+    return image_ids
 
 
 def get_targets():
@@ -62,8 +87,20 @@ def get_image(image_id):
     return image
 
 
+def get_map(map_id):
+    """Return the map object associated with specified map_id."""
+    for map_ in global_maps:
+        if map_["map_id"] == map_id:
+            return map_
+
+
 """LOAD SOME THINGS INTO MEMORY THAT ARE USEFUL THROUGHOUT."""
 # Load some data that will be used throughout the system.
-print("Building truth tree")
-ground_truth = get_ground_truth()
-truth_tree = build_truth_tree()
+print("> Building truth/image trees")
+# Prepend variables with "global" by convention.
+global_ground_truth = get_ground_truth()
+global_image_locations = get_image_locations()
+global_truth_tree = build_truth_tree()
+global_image_tree = build_image_tree()
+global_maps = map_summaries()
+print("> Complete")

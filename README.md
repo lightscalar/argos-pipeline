@@ -43,19 +43,22 @@ numbers, and underscores; punctuation and spaces are verboten.
 
 ## Database
 
-ARGOS relies on a MongoDB database running on the local host. The database is
-named `ARGOS`, and it contains three collections:
+ARGOS relies on a  locally-hosted MongoDB database. The database is named
+`ARGOS`, and it contains four collections:
 
 ```unix
 targets
 ground_truth
 annotations
+imagery
 ```
 
 The `targets` collection stores descriptions of all valid Annotation Targets
 (see below). The `ground_truth` collection stores all field-collected,
-georeferenced ground truth. Finally, `annotations` organizes all manual tile
-annotations made via the user interface.
+georeferenced ground truth. The `annotations` organizes all manual tile
+annotations made via the user interface. Finally, the imagery collection keeps
+track of the high-resolution images, and their approximate locations (in
+latitude and longitude).
 
 Note also that when the `database` module is imported, `targets`,
 `ground_truth`, and a so-called `truth_tree` are loaded into memory. (The
@@ -123,9 +126,14 @@ minutes/flight).
 
 ## Imagery
 
-As indicated above, images are stored at the lowest point in the directory
-structure. Individual image information, including geolocation information, is
-also stored in the MongoDB.
+As indicated above, images are stored at the lowest level in the ARGOS
+directory structure. Individual image information, including geolocation
+information, is also stored in the MongoDB in the `imagery` collection.
+
+A list of nearby images can be obtained via a GET request to
+`/images/:map_id/?row=0.5&col=0.75`, where the `row` and `col` query parameters
+specify the point of interest in terms of the fractional width (col) and height
+(row) of the map. A list of the ten nearest images are returned.
 
 ## Ground Truth
 

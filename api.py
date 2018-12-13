@@ -1,6 +1,7 @@
 """Provide an API endpoint for the QuoteMachine."""
 # from database import *
 # from match_groundtruth import *
+from database import *
 from ground_truth_mapping import place_ground_truth_on_map
 from utils import *
 
@@ -25,22 +26,12 @@ CORS(app)
 api = Api(app)
 
 
-maps = map_summaries()
-
-
-def find_map(map_id):
-    """Cycle through available maps to find a match."""
-    for cmap in maps:
-        if cmap["map_id"] == map_id:
-            return cmap
-
-
 class Maps(Resource):
     """Return all available site maps."""
 
     def get(self):
         """Maps list is loaded when server boots up."""
-        return maps
+        return global_maps
 
 
 class Map(Resource):
@@ -48,7 +39,7 @@ class Map(Resource):
 
     def get(self, map_id):
         """Maps list is loaded when server boots up."""
-        tgt_map = find_map(map_id)
+        tgt_map = get_map(map_id)
         truth = place_ground_truth_on_map(tgt_map)
         return {
             "map": tgt_map,
@@ -59,8 +50,19 @@ class Map(Resource):
         }
 
 
+class Images(Resource):
+    """Returns a list of nearby images"""
+
+    def get(self, map_id):
+        """Return a list of all images near given lat/lon on given map."""
+        lat = request.args.get("col")
+        lon = request.args.get("row")
+        return {"lat": lat, "lon": lon}
+
+
 api.add_resource(Maps, "/maps", methods=["GET"])
 api.add_resource(Map, "/maps/<map_id>", methods=["GET"])
+api.add_resource(Images, "/images/<map_id>", methods=["GET"])
 
 if __name__ == "__main__":
     wsgi.server(eventlet.listen(("localhost", PORT)), app)

@@ -7,6 +7,8 @@ from vessel import Vessel
 from datetime import datetime
 from glob import glob
 from ipdb import set_trace as debug
+from osgeo import gdal, osr
+import pylab as plt
 from skimage.io import imread
 import shutil
 import re
@@ -219,6 +221,13 @@ def map_summaries():
                                 path_to_geomap = f"{altitude}/maps/map.tif"
                                 path_to_images = f"{altitude}/images"
                                 map_id = f"{year_}-{month_}-{day_}-{sitename}-{alt}"
+
+                                # Get map sizes.
+                                ds = gdal.Open(path_to_geomap)
+                                geo_rows = ds.RasterYSize
+                                geo_cols = ds.RasterXSize
+                                small_map = plt.imread(path_to_map)
+                                small_rows, small_cols, _ = small_map.shape
                             else:
                                 continue  # No images? Don't return this map.
                             if len(glob(f"{altitude}/maps/map.tif")) > 0:
@@ -231,6 +240,10 @@ def map_summaries():
                                         "site": sitename,
                                         "altitude": alt,
                                         "nb_images": nb_images,
+                                        "geo_rows": geo_rows,
+                                        "geo_cols": geo_cols,
+                                        "small_rows": small_rows,
+                                        "small_cols": small_cols,
                                         "lat": f"{first_meta['img_lat']:.4f}",
                                         "lon": f"{first_meta['img_lon']:.4f}",
                                         "start": start,
@@ -272,11 +285,6 @@ def parse_map_id(map_id):
         }
     else:
         return {"error": "Cannot parse given map ID."}
-
-
-# def new_filename(old_filename):
-#     """Construct a new filename based on old filename."""
-#     regex = r"(DJI_)(\d+)"
 
 
 def fix_image_filenames(path_to_images):
