@@ -2,7 +2,7 @@
 # from database import *
 # from match_groundtruth import *
 from database import *
-from ground_truth_mapping import place_ground_truth_on_map
+from ground_truth_mapping import place_ground_truth_on_map, convert_map_coord_to_lat_lon
 from utils import *
 
 from bson import ObjectId
@@ -55,9 +55,10 @@ class Images(Resource):
 
     def get(self, map_id):
         """Return a list of all images near given lat/lon on given map."""
-        lat = request.args.get("col")
-        lon = request.args.get("row")
-        return {"lat": lat, "lon": lon}
+        col = float(request.args.get("col"))
+        row = float(request.args.get("row"))
+        map_lat, map_lon = convert_map_coord_to_lat_lon(col, row, map_id)
+        return nearby_images(map_lat, map_lon)
 
 
 api.add_resource(Maps, "/maps", methods=["GET"])
