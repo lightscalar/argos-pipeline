@@ -2,6 +2,7 @@
 from config import *
 from database import *
 from utils import *
+from homography_utils import GeoReferencer
 
 import fiona
 import numpy as np
@@ -131,11 +132,22 @@ if __name__ == "__main__":
     ground_truth_collection.delete_many({})
     ground_truth_collection.insert_many(ground_truths)
 
-    # Now ingest image data. Check to see if we need to.
+    # Ingest MAPS!
+    print("> Finding maps.")
     maps = map_summaries()
+    print("> Done.")
+    for map_ in maps:
+        if get_map(map_["map_id"]) is None:
+            map_collection.insert_one(map_)
 
+    # Delete the image collection?
+    delete_imagery = False
+    if delete_imagery:  # CAUTION! EXPENSIVE TO CREATE
+        imagery_collection.delete_many({})
+
+    # For each of the maps available, ingest all available images.
     for cmap in maps:
-        print('> Ingesting images for map {cmap["map_id"]}')
+        print(f'> Ingesting images for map {cmap["map_id"]}')
         # Get a list of images.
         path_to_images = prepend_argos_root(cmap["path_to_images"])
         images = sorted(glob(f"{path_to_images}/*.JPG"))
@@ -143,6 +155,7 @@ if __name__ == "__main__":
         for path_to_image in tqdm(images):
             image_number = extract_image_number(path_to_image)
             image_id = f"{cmap['map_id']}-IMG_{image_number}"
+            image_info = parse_image_id(image_id)
             if get_image(image_id) is None:  # only insert new images.
                 info = extract_info(path_to_image)
                 image_obj = {
@@ -152,5 +165,31 @@ if __name__ == "__main__":
                     "lon": info["img_lon"],
                     "height": info["img_height"],
                     "width": info["img_width"],
+                    "year": image_info["year"],
+                    "month": image_info["month"],
+                    "day": image_info["day"],
+                    "site": image_info["site"],
+                    "path_to_image": image_info["path_to_image"],
+                    "path_to_map": image_info["path_to_map"],
                 }
+                # Compute the georeferencing transform information. VERY EXPENSIVE!
+                geo = GeoReferencer(
+                    prepend_argos_root(image_obj["path_to_image"]),
+                    prepend_argos_root(image_obj["path_to_map"]),
+                )
+                if geo.valid:
+                    image_obj["geo_M"] = geo.M.tolist()
+                    image_obj["geo_image_lower"] = geo.image_lower
+                    image_obj["geo_image_left"] = geo.image_left
+                    image_obj["geo_map_lower"] = geo.map_lower
+                    image_obj["geo_map_left"] = geo.map_left
+                else:
+                    print("> Homography attempt failed")
+                    image_obj["geo_M"] = []
+                    image_obj["geo_image_lower"] = 0
+                    image_obj["geo_image_left"] = 0
+                    image_obj["geo_map_lower"] = 0
+                    image_obj["geo_map_left"] = 0
+
+                # Insert this image object into the database.
                 imagery_collection.insert_one(image_obj)

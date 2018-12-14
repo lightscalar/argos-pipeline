@@ -1,12 +1,16 @@
 """Utilities for computing homongraphies between images."""
 from geo_utils import *
-from pixel_position import *
+from georeferencer import *
+from utils import *
 
 import cv2
 from ipdb import set_trace as debug
 from osgeo import gdal
 import pylab as plt
 from skimage.transform import resize
+
+
+CHUNK_SIZE = 800
 
 
 def convert_to_integer(image_array):
@@ -51,7 +55,9 @@ def extract_piece_of_map(map_array, col, row, chunk_width=500, chunk_height=500)
     return map_array[int(lower) : int(upper), int(left) : int(right)], lower, left
 
 
-def match_image_to_map(image_filename, map_filename, make_picture=False):
+def match_image_to_map(
+    image_filename, map_filename, make_picture=False, chunk_size=CHUNK_SIZE
+):
     """Determine the homography between an image and a map."""
 
     # Load the images.
@@ -69,12 +75,12 @@ def match_image_to_map(image_filename, map_filename, make_picture=False):
     # Extract relevant portion from the map.
     col, row = coord_to_pixel(ortho_obj, meta_dict["img_lon"], meta_dict["img_lat"])
     map_array, map_lower, map_left = extract_piece_of_map(
-        map_array, col, row, chunk_width=1000, chunk_height=1000
+        map_array, col, row, chunk_width=chunk_size, chunk_height=chunk_size
     )
 
     # Extract a portion of the hi resolution image.
     image_array, image_lower, image_left = extract_piece_of_map(
-        image_array, 2000, 1500, 1000, 1000
+        image_array, 2000, 1500, chunk_size, chunk_size
     )
 
     # Akshully, let's flip the arrays.
@@ -162,7 +168,7 @@ def match_image_to_map(image_filename, map_filename, make_picture=False):
             keyPoints2,
             good_matches,
             None,
-            **draw_parameters
+            **draw_parameters,
         )
         plt.ion()
         plt.close("all")
@@ -181,6 +187,10 @@ class GeoReferencer(object):
         M, image_lower, image_left, map_lower, map_left = match_image_to_map(
             image_filename, map_filename
         )
+        # if M is None:  # try again with a larger patch
+        #     M, image_lower, image_left, map_lower, map_left = match_image_to_map(
+        #         image_filename, map_filename, chunk_size=2 * CHUNK_SIZE
+        #     )
         self.M, self.image_lower, self.image_left, self.map_lower, self.map_left = (
             M,
             image_lower,
@@ -222,13 +232,22 @@ class GeoReferencer(object):
         map_col_, map_row_ = self.map_shift(map_col, map_row)
         return map_col_, map_row_
 
+    def latlon_to_image_coord(self, lat, lon):
+        """Map lat/lon to coordinate system of the image."""
+        map_col, map_row = coord_to_pixel(self.ortho_obj, lon, lat)
+
 
 if __name__ == "__main__":
+    from glob import glob
 
     path_to_image = ""
     path_to_map = ""
     map_filename = "MinerStreetSmall.tif"
     image_filename = "DJI_0468.JPG"
-
-    homography = match_image_to_map(image_filename, map_filename, make_picture=True)
-    gr = GeoReferencer(image_filename, map_filename)
+    maps = map_summaries()
+    path_to_map = prepend_argos_root(maps[0]["path_to_geomap"])
+    path_to_site = "/".join(path_to_map.split("/")[:-2])
+    path_to_images = glob(f"{path_to_site}/images/*.JPG")
+    path_to_image = path_to_images[30]
+    homography = match_image_to_map(path_to_image, path_to_map, make_picture=True)
+    # gr = GeoReferencer(path_to_image, path_to_map)

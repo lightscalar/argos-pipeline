@@ -58,7 +58,16 @@ class Images(Resource):
         col = float(request.args.get("col"))
         row = float(request.args.get("row"))
         map_lat, map_lon = convert_map_coord_to_lat_lon(col, row, map_id)
-        return nearby_images(map_lat, map_lon)
+        return nearby_images(map_lat, map_lon, map_id=map_id)
+
+
+class Image(Resource):
+    """Return info and ground truth associated with a single image."""
+
+    def get(self, image_id):
+        """Load the image and map associated ground truth."""
+        image_info = parse_image_id(image_id)
+        image_info['ground_truth
 
 
 api.add_resource(Maps, "/maps", methods=["GET"])

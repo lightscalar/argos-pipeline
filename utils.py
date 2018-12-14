@@ -205,9 +205,12 @@ def map_summaries():
                                 first_meta = extract_info(images[0])
                                 last_meta = extract_info(images[-1])
                                 start = first_meta["date_time"]
-                                datetime_obj = datetime.strptime(
-                                    start, "%Y:%m:%d %I:%M:%S"
-                                )
+                                try:
+                                    datetime_obj = datetime.strptime(
+                                        start, "%Y:%m:%d %H:%M:%S"
+                                    )
+                                except:
+                                    debug()
                                 datetime_str = datetime_obj.strftime("%d %b %Y")
                                 smalldate = datetime_obj.strftime("%Y-%m-%d")
                                 time_str = datetime_obj.strftime("%I-%M%p")
@@ -223,6 +226,8 @@ def map_summaries():
                                 map_id = f"{year_}-{month_}-{day_}-{sitename}-{alt}"
 
                                 # Get map sizes.
+                                if len(glob(path_to_geomap)) == 0:
+                                    continue
                                 ds = gdal.Open(path_to_geomap)
                                 geo_rows = ds.RasterYSize
                                 geo_cols = ds.RasterXSize
@@ -275,7 +280,12 @@ def parse_image_id(image_id):
     site = image_id_list[3]
     altitude = image_id_list[4]
     image_number = image_id_list[5]
+    path_to_map_root = "/".join(image_id_list[:-1])
+    path_to_image = f"{path_to_map_root}/images/{image_number}.JPG".replace(
+        "IMG", "DJI"
+    )
     return {
+        "image_id": image_id,
         "error": False,
         "map_id": map_id,
         "year": int(year),
@@ -284,6 +294,8 @@ def parse_image_id(image_id):
         "site": site,
         "altitude": int(altitude),
         "image_number": image_number,
+        "path_to_image": path_to_image,
+        "path_to_map": f"{path_to_map_root}/maps/map.tif",
     }
 
 

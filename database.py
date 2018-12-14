@@ -1,6 +1,5 @@
 """Utilities for accessing the database, grabbing data, etc."""
 from config import *
-from database import *
 from geo_utils import distance_on_earth
 from utils import *
 
@@ -22,6 +21,7 @@ client = MongoClient()
 
 # Connect to the database.
 db = client.ARGOS  # database
+map_collection = db.maps
 target_collection = db.targets
 ground_truth_collection = db.ground_truth
 imagery_collection = db.imagery
@@ -72,10 +72,12 @@ def nearby_images(lat, lon, max_number=10, map_id=None):
             np.array([lat, lon]).reshape(1, -1), k=100
         )
         image_list = image_list[0]
-        for image in image_list:
-            image_info = parse_image_id(image['image_id'])
-            if image_info['map_id'] == map_id:
-                image_ids.append(image_id)
+        image_ids = []
+        for image_idx in image_list:
+            image = global_image_locations[image_idx]
+            image_info = parse_image_id(image["image_id"])
+            if image_info["map_id"] == map_id:
+                image_ids.append(image["image_id"])
             else:
                 continue
             if len(image_ids) == max_number:
@@ -104,10 +106,15 @@ def get_image(image_id):
 
 
 def get_map(map_id):
-    """Return the map object associated with specified map_id."""
-    for map_ in global_maps:
-        if map_["map_id"] == map_id:
-            return map_
+    """Grab a map from the database using its unique ID."""
+    map_ = map_collection.find_one({"map_id": map_id})
+    return map_
+
+
+def get_maps():
+    """Grab a map from the database using its unique ID."""
+    maps = map_collection.find({})
+    return list(maps)
 
 
 """LOAD SOME THINGS INTO MEMORY THAT ARE USEFUL THROUGHOUT."""
@@ -118,5 +125,5 @@ global_ground_truth = get_ground_truth()
 global_image_locations = get_image_locations()
 global_truth_tree = build_truth_tree()
 global_image_tree = build_image_tree()
-global_maps = map_summaries()
+global_maps = get_maps()
 print("> Complete")

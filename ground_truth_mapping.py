@@ -2,6 +2,7 @@
 from database import *
 from geo_utils import *
 from georeferencer import *
+from homography_utils import GeoReferencer
 from utils import prepend_argos_root, map_summaries
 
 from ipdb import set_trace as debug
@@ -52,6 +53,19 @@ def convert_map_coord_to_lat_lon(col_fraction, row_fraction, map_id):
     # Convert to latitude and longitude.
     map_lon, map_lat = pixel_to_coord(ds, col, row)
     return map_lat, map_lon
+
+
+def place_ground_truth_on_image(image_obj):
+    """Returns a list of (row,col) coordinates for placement on small map."""
+    path_to_image = prepend_argos_root(image_obj["path_to_image"])
+    path_to_map = prepend_argos_root(image_obj["path_to_map"])
+    image_location = imagery_collection.find_one(
+        {"image_id": image_obj["image_id"]}, {"lat", "lon"}
+    )
+    image_obj["lat"] = image_location["lat"]
+    image_obj["lon"] = image_location["lon"]
+    gr = GeoReferencer(path_to_image, path_to_map)
+    return gr
 
 
 def place_ground_truth_on_map(map_obj):
