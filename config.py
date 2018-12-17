@@ -20,8 +20,6 @@ if user == "mjl":
     # MODEL_LOCATION = "/Users/mjl/dev/mnfi/argos_pipeline/data/models"
 
 elif user == "jgc":
-    pass
-    # IMAGE_LOCATION = "/Users/jgc/dev/data/FLIGHTS"
-    # IMAGE_SERVER_LOCATION = "/Users/jgc/dev/data"
-    # API_LOCATION = "/Users/jgc/dev/argos/api"
-    # STATIC_LOCATION = "/Users/jgc/dev/argos/dist"
+    ARGOS_ROOT = "/Users/jgc/ARGOS"
+    TARGET_FILE = "truth/target_key.xlsx"
+    TRUTH_FILES = glob("truth/*.shp")
