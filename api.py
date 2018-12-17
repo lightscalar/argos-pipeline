@@ -2,7 +2,11 @@
 # from database import *
 # from match_groundtruth import *
 from database import *
-from ground_truth_mapping import place_ground_truth_on_map, convert_map_coord_to_lat_lon
+from ground_truth_mapping import (
+    place_ground_truth_on_map,
+    convert_map_coord_to_lat_lon,
+    place_ground_truth_on_image,
+)
 from utils import *
 
 from bson import ObjectId
@@ -66,13 +70,15 @@ class Image(Resource):
 
     def get(self, image_id):
         """Load the image and map associated ground truth."""
-        image_info = parse_image_id(image_id)
-        image_info['ground_truth
+        image_obj = get_image(image_id)
+        image_obj["truth"] = place_ground_truth_on_image(image_obj)
+        return image_obj
 
 
 api.add_resource(Maps, "/maps", methods=["GET"])
 api.add_resource(Map, "/maps/<map_id>", methods=["GET"])
-api.add_resource(Images, "/images/<map_id>", methods=["GET"])
+api.add_resource(Images, "/map-images/<map_id>/", methods=["GET"])
+api.add_resource(Image, "/images/<image_id>", methods=["GET"])
 
 if __name__ == "__main__":
     wsgi.server(eventlet.listen(("localhost", PORT)), app)

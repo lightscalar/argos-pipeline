@@ -5,6 +5,7 @@ from glob import glob
 
 # Find the current user.
 user = getpass.getuser()
+EPSG = 4326
 
 # Determine location of image data based on current user.
 if user == "mjl":

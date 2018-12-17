@@ -1,16 +1,27 @@
 """Utilities for computing homongraphies between images."""
+from database import *
 from geo_utils import *
 from georeferencer import *
 from utils import *
 
 import cv2
 from ipdb import set_trace as debug
+import numpy as np
 from osgeo import gdal
 import pylab as plt
 from skimage.transform import resize
 
 
-CHUNK_SIZE = 800
+CHUNK_SIZE = 400
+
+
+def perspective_transform(point, M):
+    """Transform point using perspective transformation M."""
+    point = np.array(point)
+    point = np.hstack((point, 1))
+    point_prime = M.dot(point)
+    point_prime = point_prime / point_prime[2]
+    return point_prime[0:2]
 
 
 def convert_to_integer(image_array):
@@ -109,7 +120,7 @@ def match_image_to_map(
     # Apply the homography transformation if we have enough good matches
     MIN_MATCH_COUNT = 10
 
-    if len(good_matches) > MIN_MATCH_COUNT:
+    if len(good_matches) >= MIN_MATCH_COUNT:
         # Get the good key points positions
         sourcePoints = np.float32(
             [keyPoints1[m.queryIdx].pt for m in good_matches]
@@ -181,23 +192,23 @@ def match_image_to_map(
 class GeoReferencer(object):
     """High accuracy georeferencing of image to an orthoreferenced map via homograhy."""
 
-    def __init__(self, image_filename, map_filename):
+    def __init__(self, image_filename, map_filename, homography=None):
         """Find the homography mapping between the image and the map."""
         # Compute the image to map honmography (a perspective warp).
-        M, image_lower, image_left, map_lower, map_left = match_image_to_map(
-            image_filename, map_filename
-        )
-        # if M is None:  # try again with a larger patch
-        #     M, image_lower, image_left, map_lower, map_left = match_image_to_map(
-        #         image_filename, map_filename, chunk_size=2 * CHUNK_SIZE
-        #     )
-        self.M, self.image_lower, self.image_left, self.map_lower, self.map_left = (
-            M,
-            image_lower,
-            image_left,
-            map_lower,
-            map_left,
-        )
+        if homography is None:
+            M, image_lower, image_left, map_lower, map_left = match_image_to_map(
+                image_filename, map_filename
+            )
+        else:
+            # We're loading in pre-computed homography mapping.
+            M, image_lower, image_left, map_lower, map_left = homography
+        # Attach this stuff to the object.
+        self.M = M
+        self.image_lower = image_lower
+        self.image_left = image_left
+        self.map_lower = map_lower
+        self.map_left = map_left
+        self.Minv = np.linalg.inv(self.M)
         self.ortho_obj = gdal.Open(map_filename)
         self.metadata = extract_info(image_filename)
         if M is not None:
@@ -209,10 +220,20 @@ class GeoReferencer(object):
         """Shift pixel into our mapping coordinate system."""
         return col - self.image_left, row - self.image_lower
 
+    def image_unshift(self, col, row):
+        """Unshift pixel back to original image coordinate system."""
+        return col + self.image_left, row + self.image_lower
+
     def map_shift(self, col, row):
         """Shift pixel into proper map offset coordinate system."""
         col_ = col + self.map_left
         row_ = row + self.map_lower
+        return col_, row_
+
+    def map_unshift(self, col, row):
+        """Unshift pixel back to original coordinate system."""
+        col_ = col - self.map_left
+        row_ = row - self.map_lower
         return col_, row_
 
     def pixel_to_latlon(self, col, row):
@@ -234,7 +255,12 @@ class GeoReferencer(object):
 
     def latlon_to_image_coord(self, lat, lon):
         """Map lat/lon to coordinate system of the image."""
-        map_col, map_row = coord_to_pixel(self.ortho_obj, lon, lat)
+        # This maps lat/lon to position pixel position in high-res image.
+        map_col_, map_row_ = coord_to_pixel(self.ortho_obj, lon, lat)
+        map_col, map_row = self.map_unshift(map_col_, map_row_)
+        col_, row_ = perspective_transform([map_col, map_row], self.Minv)
+        col, row = self.image_unshift(col_, row_)
+        return col, row
 
 
 if __name__ == "__main__":
@@ -244,10 +270,10 @@ if __name__ == "__main__":
     path_to_map = ""
     map_filename = "MinerStreetSmall.tif"
     image_filename = "DJI_0468.JPG"
-    maps = map_summaries()
+    maps = get_maps()
     path_to_map = prepend_argos_root(maps[0]["path_to_geomap"])
     path_to_site = "/".join(path_to_map.split("/")[:-2])
     path_to_images = glob(f"{path_to_site}/images/*.JPG")
     path_to_image = path_to_images[30]
     homography = match_image_to_map(path_to_image, path_to_map, make_picture=True)
-    # gr = GeoReferencer(path_to_image, path_to_map)
+    gr = GeoReferencer(path_to_image, path_to_map)

@@ -59,13 +59,35 @@ def place_ground_truth_on_image(image_obj):
     """Returns a list of (row,col) coordinates for placement on small map."""
     path_to_image = prepend_argos_root(image_obj["path_to_image"])
     path_to_map = prepend_argos_root(image_obj["path_to_map"])
-    image_location = imagery_collection.find_one(
-        {"image_id": image_obj["image_id"]}, {"lat", "lon"}
+    homography = extract_homography_from_image_object(image_obj)
+    gr = GeoReferencer(path_to_image, path_to_map, homography=homography)
+    image_lon = image_obj["lon"]
+    image_lat = image_obj["lat"]
+    _, nearby_truth = global_truth_tree.query([[image_lat, image_lon]], k=100)
+    targets = get_targets()
+    image = plt.imread(path_to_image)
+    image_rows, image_cols, color_channels = image.shape
+    nearby_truth_list = []
+    for truth_idx in nearby_truth[0]:
+        tru = global_ground_truth[truth_idx]
+        lat, lon = tru["latlon"]
+        col, row = gr.latlon_to_image_coord(lat, lon)
+        if not in_map(row, col, image_rows, image_cols):
+            break
+        gt = {"col": col / image_cols, "row": row / image_rows, "code": tru["code"]}
+        gt = match_truth_to_target(gt, targets)
+        if gt is not None:
+            nearby_truth_list.append(gt)
+    # Extract unique ground truth targets.
+    unique_targets_present = find_unique_targets(nearby_truth_list)
+    unique_targets_present = sorted(
+        unique_targets_present, key=lambda x: x["scientific_name"]
     )
-    image_obj["lat"] = image_location["lat"]
-    image_obj["lon"] = image_location["lon"]
-    gr = GeoReferencer(path_to_image, path_to_map)
-    return gr
+    package = {
+        "nearby_truth": nearby_truth_list,
+        "unique_truth": unique_targets_present,
+    }
+    return package
 
 
 def place_ground_truth_on_map(map_obj):
@@ -131,35 +153,68 @@ if __name__ == "__main__":
     plt.ion()
     plt.close("all")
 
-    # Place ground truth on a map.
-    maps = map_summaries()
-    map_idx = 1
-    truths = place_ground_truth_on_map(maps[map_idx])
-    nearby_truth = truths["nearby_truth"]
-    unique_truth = truths["unique_truth"]
-    img = plt.imread(prepend_argos_root(maps[map_idx]["path_to_map"]))
-    plt.imshow(img)
-    for itr, truth in enumerate(nearby_truth):
-        color = truth["color_code"]
-        r, c = int(truth["row"]), int(truth["col"])
-        plt.plot(
-            truth["col"],
-            truth["row"],
-            "o",
-            markersize=5,
-            markerfacecolor=color,
-            markeredgecolor=color,
-        )
-    for itr, truth in enumerate(unique_truth):
-        color = truth["color_code"]
-        r, c = int(truth["row"]), int(truth["col"])
-        plt.plot(
-            truth["col"],
-            truth["row"],
-            "o",
-            markersize=5,
-            markerfacecolor=color,
-            markeredgecolor=color,
-            label=truth["scientific_name"],
-        )
-    plt.legend()
+    test_maps = False
+    test_imgs = True
+
+    if test_imgs:
+        image_list = list(imagery_collection.find({}))
+        image_obj = image_list[19]
+        path_to_image = prepend_argos_root(image_obj["path_to_image"])
+        package = place_ground_truth_on_image(image_obj)
+        nearby_truth = package["nearby_truth"]
+        unique_truth = package["unique_truth"]
+        img = plt.imread(path_to_image)
+        plt.imshow(img)
+        for itr, truth in enumerate(nearby_truth):
+            color = truth["color_code"]
+            r, c = int(truth["row"] * img.shape[0]), int(truth["col"] * img.shape[1])
+            plt.plot(
+                c, r, "o", markersize=5, markerfacecolor=color, markeredgecolor=color
+            )
+        for itr, truth in enumerate(unique_truth):
+            color = truth["color_code"]
+            r, c = int(truth["row"]), int(truth["col"])
+            plt.plot(
+                truth["col"],
+                truth["row"],
+                "o",
+                markersize=5,
+                markerfacecolor=color,
+                markeredgecolor=color,
+                label=truth["scientific_name"],
+            )
+        plt.legend()
+
+    if test_maps:
+        # Place ground truth on a map.
+        maps = map_summaries()
+        map_idx = 1
+        truths = place_ground_truth_on_map(maps[map_idx])
+        nearby_truth = truths["nearby_truth"]
+        unique_truth = truths["unique_truth"]
+        img = plt.imread(prepend_argos_root(maps[map_idx]["path_to_map"]))
+        plt.imshow(img)
+        for itr, truth in enumerate(nearby_truth):
+            color = truth["color_code"]
+            r, c = int(truth["row"]), int(truth["col"])
+            plt.plot(
+                truth["col"],
+                truth["row"],
+                "o",
+                markersize=5,
+                markerfacecolor=color,
+                markeredgecolor=color,
+            )
+        for itr, truth in enumerate(unique_truth):
+            color = truth["color_code"]
+            r, c = int(truth["row"]), int(truth["col"])
+            plt.plot(
+                truth["col"],
+                truth["row"],
+                "o",
+                markersize=5,
+                markerfacecolor=color,
+                markeredgecolor=color,
+                label=truth["scientific_name"],
+            )
+        plt.legend()

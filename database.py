@@ -87,33 +87,30 @@ def nearby_images(lat, lon, max_number=10, map_id=None):
 
 def get_targets():
     """List all species in the database."""
-    target_list = list(target_collection.find({}))
-    # ObjectId is not serializable, so...
-    for target in target_list:
-        target["_id"] = str(target["_id"])
+    target_list = list(target_collection.find({}, {'_id': 0}))
     return target_list
 
 
 def get_ground_truth():
     """Return all ground truth."""
-    return list(ground_truth_collection.find({}))
+    return list(ground_truth_collection.find({}, {'_id': 0}))
 
 
 def get_image(image_id):
     """Find an image based on its unique image_id."""
-    image = imagery_collection.find_one({"image_id": image_id})
+    image = imagery_collection.find_one({"image_id": image_id}, {'_id': 0})
     return image
 
 
 def get_map(map_id):
     """Grab a map from the database using its unique ID."""
-    map_ = map_collection.find_one({"map_id": map_id})
+    map_ = map_collection.find_one({"map_id": map_id}, {'_id': 0})
     return map_
 
 
 def get_maps():
     """Grab a map from the database using its unique ID."""
-    maps = map_collection.find({})
+    maps = map_collection.find({}, {"_id": 0})
     return list(maps)
 
 
@@ -122,8 +119,9 @@ def get_maps():
 print("> Building truth/image trees")
 # Prepend variables with "global" by convention.
 global_ground_truth = get_ground_truth()
-global_image_locations = get_image_locations()
-global_truth_tree = build_truth_tree()
-global_image_tree = build_image_tree()
-global_maps = get_maps()
+if len(global_ground_truth) > 0:
+    global_image_locations = get_image_locations()
+    global_truth_tree = build_truth_tree()
+    global_image_tree = build_image_tree()
+    global_maps = get_maps()
 print("> Complete")

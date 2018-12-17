@@ -27,5 +27,3 @@ if __name__ == "__main__":
     for image in tqdm(images):
         image_number = extract_image_number(image)
         image_id = f"{cmap['map_id']}-IMG_{image_number}"
-        d
-        # info = extract_info(image)

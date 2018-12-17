@@ -341,6 +341,18 @@ def prepend_argos_root(path):
     return f"{ARGOS_ROOT}/{path}"
 
 
+def extract_homography_from_image_object(image_obj):
+    """Get the transformation matrix and offsets into a tuple"""
+    M = np.array(image_obj["geo_M"])
+    if M.shape[0] == 0:
+        M = None
+    image_lower = image_obj["geo_image_lower"]
+    image_left = image_obj["geo_image_left"]
+    map_lower = image_obj["geo_map_lower"]
+    map_left = image_obj["geo_map_left"]
+    return (M, image_lower, image_left, map_lower, map_left)
+
+
 if __name__ == "__main__":
 
     # DEPOT = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/MNFI/FLIGHTS"

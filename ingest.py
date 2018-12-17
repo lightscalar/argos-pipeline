@@ -82,13 +82,13 @@ if __name__ == "__main__":
     water = {
         "scientific_name": "H2O",
         "codes": ["H2O"],
-        "common_name": "water",
+        "common_name": "Water",
         "physiognomy": "N/A",
         "category": "Physical Feature",
         "color_code": "#0e87cc",
     }
     street = {
-        "scientific_name": "Roadus Roadius",
+        "scientific_name": "Roadus roadius",
         "codes": ["ROAD"],
         "common_name": "Road",
         "physiognomy": "N/A",
@@ -104,12 +104,44 @@ if __name__ == "__main__":
         "color_code": "#8a6e45",
     }
     rock = {
-        "scientific_name": "Rocky Rockinius",
+        "scientific_name": "Rocky rockinius",
         "codes": ["ROCK"],
         "common_name": "Rock",
         "physiognomy": "N/A",
         "category": "Physical Feature",
         "color_code": "#ada587",
+    }
+    florist = {
+        "scientific_name": "Joshua floristis",
+        "codes": ["JOSH"],
+        "common_name": "Josh",
+        "physiognomy": "N/A",
+        "category": "Animal Wildlife",
+        "color_code": "#8e44ad",
+    }
+    pilot = {
+        "scientific_name": "Matthew pilotis",
+        "codes": ["MATT"],
+        "common_name": "Matt",
+        "physiognomy": "N/A",
+        "category": "Animal Wildlife",
+        "color_code": "#2c3e50",
+    }
+    animal = {
+        "scientific_name": "Animal generalis",
+        "codes": ["ANIM"],
+        "common_name": "Animal",
+        "physiognomy": "N/A",
+        "category": "Animal Wildlife",
+        "color_code": "#2c3e50",
+    }
+    leaf_litter = {
+        "scientific_name": "Leafy litteris",
+        "codes": ["LEAF"],
+        "common_name": "Dead Leaf Litter"
+        "physiognomy": "N/A",
+        "category": "Biological Feature",
+        "color_code": "#f39c12",
     }
 
     # Add additional target features.
@@ -117,6 +149,10 @@ if __name__ == "__main__":
     targets.append(street)
     targets.append(sand)
     targets.append(rock)
+    targets.append(florist)
+    targets.append(pilot)
+    targets.append(animal)
+    targets.append(leaf_litter)
 
     # Add the plants to the database.
     target_collection.delete_many({})  # first get rid of all of them.

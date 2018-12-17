@@ -1,4 +1,5 @@
 """Find the latitude, longitude position of any pixel in a georeferenced tif file."""
+from config import *
 from osgeo import gdal, osr
 import numpy as np
 
@@ -15,7 +16,7 @@ def pixel_to_coord(ds, col, row):
     source.ImportFromWkt(ds.GetProjection())
 
     target = osr.SpatialReference()
-    target.ImportFromEPSG(4326)
+    target.ImportFromEPSG(EPSG)
 
     transform = osr.CoordinateTransformation(source, target)
     result = transform.TransformPoint(lon, lat)
@@ -23,7 +24,7 @@ def pixel_to_coord(ds, col, row):
     lat = result[1]
 
     # Returns: lon, lat
-    return lon, lat
+    return result[0], result[1]
 
 
 def coord_to_pixel(ds, lon, lat):
@@ -31,7 +32,7 @@ def coord_to_pixel(ds, lon, lat):
 
     # Invert the transformation between coordinate systems.
     source = osr.SpatialReference()
-    source.ImportFromEPSG(4326)
+    source.ImportFromEPSG(EPSG)
 
     target = osr.SpatialReference()
     target.ImportFromWkt(ds.GetProjection())
