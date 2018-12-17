@@ -52,9 +52,12 @@ def build_truth_tree():
 def build_image_tree():
     """Compute a BallTree object for images in the database."""
     images = get_image_locations()
-    image_locations = np.array([[img["lat"], img["lon"]] for img in images])
-    image_tree = BallTree(image_locations, metric=distance_on_earth)
-    return image_tree
+    if len(images)>0:
+        image_locations = np.array([[img["lat"], img["lon"]] for img in images])
+        image_tree = BallTree(image_locations, metric=distance_on_earth)
+        return image_tree
+    else:
+        return None
 
 
 def nearby_images(lat, lon, max_number=10, map_id=None):
