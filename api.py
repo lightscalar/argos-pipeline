@@ -204,5 +204,5 @@ if __name__ == "__main__":
     if getuser() == 'mjl':
         wsgi.server(eventlet.listen(("localhost", PORT)), app)
     elif getuser() == 'mlewis': # we're on Zee
-        wsgi.server(eventlet.listen(("http://argos.michaero.com", PORT)), app)
+        wsgi.server(eventlet.listen(("http://192.168.40.5", PORT)), app)
 
