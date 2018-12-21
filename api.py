@@ -199,4 +199,10 @@ api.add_resource(GroundTruth, "/truths/<image_id>", methods=["DELETE"])
 
 
 if __name__ == "__main__":
-    wsgi.server(eventlet.listen(("localhost", PORT)), app)
+    from getpass import getuser
+
+    if getuser() == 'mjl':
+        wsgi.server(eventlet.listen(("localhost", PORT)), app)
+    elif getuser() == 'mlewis': # we're on Zee
+        wsgi.server(eventlet.listen(("10.0.0.1", PORT)), app)
+

@@ -18,8 +18,9 @@ if user == "mjl":
     # API_LOCATION = "/Users/mjl/dev/mnfi/argos/api"
     # STATIC_LOCATION = "/Users/mjl/dev/mnfi/argos/dist"
     # MODEL_LOCATION = "/Users/mjl/dev/mnfi/argos_pipeline/data/models"
-
-elif user == "jgc":
+elif user == "jgc": # we're on Josh's laptop
     ARGOS_ROOT = "/Users/jgc/ARGOS"
     TARGET_FILE = "truth/target_key.xlsx"
     TRUTH_FILES = glob("truth/*.shp")
+elif user="mlewis": # we're deployed on Zee
+    ARGOS_ROOT="/mnt/scratch/ARGOS"
