@@ -12,7 +12,7 @@ import pylab as plt
 from skimage.transform import resize
 
 
-CHUNK_SIZE = 400
+CHUNK_SIZE = 800
 
 
 def perspective_transform(point, M):
@@ -35,6 +35,8 @@ def extract_piece_of_map(map_array, col, row, chunk_width=500, chunk_height=500)
 
     # Characterize the shape of the map.
     map_height, map_width = map_array.shape
+
+    # Make sure we don't grab too much of the image.
 
     # Find height indices (worry about points near edges of map).
     if row - chunk_height / 2 < 0:
@@ -61,7 +63,6 @@ def extract_piece_of_map(map_array, col, row, chunk_width=500, chunk_height=500)
     else:
         left = col - chunk_width / 2
         right = col + chunk_width / 2
-
     # Extract the desired region from the full image.
     return map_array[int(lower) : int(upper), int(left) : int(right)], lower, left
 
@@ -95,7 +96,7 @@ def match_image_to_map(
     )
 
     # Akshully, let's flip the arrays.
-    temp_array = 1 * map_array
+    temp_array = np.copy(map_array)
     map_array = image_array
     image_array = temp_array
 
@@ -108,17 +109,19 @@ def match_image_to_map(
     bf = cv2.BFMatcher()
 
     # Match the descriptors
-    matches = bf.knnMatch(descriptors1, descriptors2, k=2)
-
-    # Select the good matches using the ratio test
-    good_matches = []
-
-    for m, n in matches:
-        if m.distance < 0.7 * n.distance:
-            good_matches.append(m)
+    try:
+        # Select the good matches using the ratio test
+        matches = bf.knnMatch(descriptors1, descriptors2, k=2)
+        good_matches = []
+        for m, n in matches:
+            if m.distance < 0.7 * n.distance:
+                good_matches.append(m)
+    except:
+        print("> Match generation failed.")
+        good_matches = []
 
     # Apply the homography transformation if we have enough good matches
-    MIN_MATCH_COUNT = 10
+    MIN_MATCH_COUNT = 5
 
     if len(good_matches) >= MIN_MATCH_COUNT:
         # Get the good key points positions
@@ -208,7 +211,8 @@ class GeoReferencer(object):
         self.image_left = image_left
         self.map_lower = map_lower
         self.map_left = map_left
-        self.Minv = np.linalg.inv(self.M)
+        if self.M is not None:
+            self.Minv = np.linalg.inv(self.M)
         self.ortho_obj = gdal.Open(map_filename)
         self.metadata = extract_info(image_filename)
         if M is not None:
@@ -237,7 +241,7 @@ class GeoReferencer(object):
         return col_, row_
 
     def pixel_to_latlon(self, col, row):
-        """Convert a pixel to lat/lon using computed homography."""
+        """Convert an image row/col to lat/lon using computed homography."""
         col_, row_ = self.image_shift(col, row)
         point = np.float32([[col_, row_]]).reshape(-1, 1, 2)
         map_col, map_row = cv2.perspectiveTransform(point, self.M).flatten()
@@ -246,7 +250,7 @@ class GeoReferencer(object):
         return lon, lat
 
     def image_coord_to_map_coord(self, col, row):
-        """Convert a coord in hires image to map coordinate."""
+        """Convert a row/col in hires image to map row/col."""
         col_, row_ = self.image_shift(col, row)
         point = np.float32([[col_, row_]]).reshape(-1, 1, 2)
         map_col, map_row = cv2.perspectiveTransform(point, self.M).flatten()
@@ -254,7 +258,7 @@ class GeoReferencer(object):
         return map_col_, map_row_
 
     def latlon_to_image_coord(self, lat, lon):
-        """Map lat/lon to coordinate system of the image."""
+        """Map lat/lon to colr/row in the hires image."""
         # This maps lat/lon to position pixel position in high-res image.
         map_col_, map_row_ = coord_to_pixel(self.ortho_obj, lon, lat)
         map_col, map_row = self.map_unshift(map_col_, map_row_)

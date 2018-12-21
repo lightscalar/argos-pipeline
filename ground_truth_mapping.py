@@ -61,20 +61,28 @@ def place_ground_truth_on_image(image_obj):
     path_to_map = prepend_argos_root(image_obj["path_to_map"])
     homography = extract_homography_from_image_object(image_obj)
     gr = GeoReferencer(path_to_image, path_to_map, homography=homography)
+    if not gr.valid:  # cannot map ground truth to the image
+        return {"nearby_truth": [], "unique_truth": []}
     image_lon = image_obj["lon"]
     image_lat = image_obj["lat"]
-    _, nearby_truth = global_truth_tree.query([[image_lat, image_lon]], k=100)
+    _, nearby_truth = ball_trees["truth"].query([[image_lat, image_lon]], k=100)
     targets = get_targets()
     image = plt.imread(path_to_image)
     image_rows, image_cols, color_channels = image.shape
     nearby_truth_list = []
+    ground_truth = get_ground_truth()
     for truth_idx in nearby_truth[0]:
-        tru = global_ground_truth[truth_idx]
+        tru = ground_truth[truth_idx]
         lat, lon = tru["latlon"]
         col, row = gr.latlon_to_image_coord(lat, lon)
         if not in_map(row, col, image_rows, image_cols):
-            break
-        gt = {"col": col / image_cols, "row": row / image_rows, "code": tru["code"]}
+            break  # all other images are farther away
+        gt = {
+            "col": col / image_cols,
+            "row": row / image_rows,
+            "code": tru["code"],
+            "type": tru["type"],
+        }
         gt = match_truth_to_target(gt, targets)
         if gt is not None:
             nearby_truth_list.append(gt)
@@ -112,13 +120,14 @@ def place_ground_truth_on_map(map_obj):
     map_lon, map_lat = pixel_to_coord(ds, ds.RasterXSize / 2, ds.RasterYSize / 2)
 
     # Find all ground truth nearby (nearest k).
-    _, nearby_truth = global_truth_tree.query([[map_lat, map_lon]], k=300)
+    _, nearby_truth = ball_trees["truth"].query([[map_lat, map_lon]], k=300)
 
     # Compile a list of ground truth attached to this map.
     targets = get_targets()
     nearby_truth_list = []
-    for truth_idx in nearby_truth[0]:
-        tru = global_ground_truth[truth_idx]
+    ground_truth = get_ground_truth()
+    for truth_idx in tqdm(nearby_truth[0]):
+        tru = ground_truth[truth_idx]
         lat, lon = tru["latlon"]
         col, row = coord_to_pixel(ds, lon, lat)
         small_col = int(col * col_convert)
@@ -129,7 +138,12 @@ def place_ground_truth_on_map(map_obj):
         if small_map[small_row, small_col, :].sum() >= 3 * 255:
             # This ground truth point is not on actual imagery, but in white buffer space.
             continue
-        gt = {"col": col * col_convert, "row": row * row_convert, "code": tru["code"]}
+        gt = {
+            "col": col * col_convert,
+            "row": row * row_convert,
+            "code": tru["code"],
+            "type": tru["type"],
+        }
         gt = match_truth_to_target(gt, targets)
         if gt is not None:
             nearby_truth_list.append(gt)
@@ -145,6 +159,30 @@ def place_ground_truth_on_map(map_obj):
         "image_cols": small_cols,
     }
     return package
+
+
+def create_machine_truth(truth):
+    """Create a new ground truth annotation."""
+    image_id = truth["image_id"]
+    image_obj = get_image(image_id)
+    path_to_map = prepend_argos_root(image_obj["path_to_map"])
+    path_to_image = prepend_argos_root(image_obj["path_to_image"])
+
+    # Extract geomapping information.
+    homography = extract_homography_from_image_object(image_obj)
+    gr = GeoReferencer(path_to_image, path_to_map, homography=homography)
+    row = truth["row"] * image_obj["height"]
+    col = truth["col"] * image_obj["width"]
+    lon, lat = gr.pixel_to_latlon(col, row)
+    truth_obj = {
+        "latlon": [lat, lon],
+        "code": truth["code"],
+        "symbol": "",
+        "datetime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        "type": "computer_annotated",
+        "image_id": image_id,
+    }
+    return truth_obj
 
 
 if __name__ == "__main__":

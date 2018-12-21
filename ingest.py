@@ -138,10 +138,18 @@ if __name__ == "__main__":
     leaf_litter = {
         "scientific_name": "Leafy litteris",
         "codes": ["LEAF"],
-        "common_name": "Dead Leaf Litter"
+        "common_name": "Dead Leaf Litter",
         "physiognomy": "N/A",
         "category": "Biological Feature",
         "color_code": "#f39c12",
+    }
+    automobile = {
+        "scientific_name": "Automobilius jeepinius",
+        "codes": ["AUTO"],
+        "common_name": "Automobile",
+        "physiognomy": "N/A",
+        "category": "Man-made Feature",
+        "color_code": "#2f3640",
     }
 
     # Add additional target features.
@@ -153,6 +161,7 @@ if __name__ == "__main__":
     targets.append(pilot)
     targets.append(animal)
     targets.append(leaf_litter)
+    targets.append(automobile)
 
     # Add the plants to the database.
     target_collection.delete_many({})  # first get rid of all of them.
@@ -186,6 +195,7 @@ if __name__ == "__main__":
         print(f'> Ingesting images for map {cmap["map_id"]}')
         # Get a list of images.
         path_to_images = prepend_argos_root(cmap["path_to_images"])
+        fix_image_filenames(path_to_images)
         images = sorted(glob(f"{path_to_images}/*.JPG"))
 
         for path_to_image in tqdm(images):
