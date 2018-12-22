@@ -26,7 +26,7 @@ import io
 
 PORT = 2005
 app = Flask(__name__)
-CORS(app, origins="*")
+CORS(app, origin="*")
 api = Api(app)
 
 
