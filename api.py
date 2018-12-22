@@ -26,7 +26,7 @@ import io
 
 PORT = 2005
 app = Flask(__name__)
-CORS(app, origin="*")
+CORS(app)
 api = Api(app)
 
 
@@ -83,7 +83,7 @@ class Targets(Resource):
         """Grab existing global targets."""
         return sorted(
             target_collection.find({}, {"_id": 0}), key=lambda x: x["scientific_name"]
-        )
+            ), 200, {'Access-Control-Allow-Origin': '*'} 
 
     def post(self):
         """Add a new target."""
