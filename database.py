@@ -32,7 +32,7 @@ target_collection.create_index([("scientific_name", pymongo.ASCENDING)], unique=
 
 # Ground truth collection.
 ground_truth_collection = db.ground_truth
-ground_truth_collection.create_index([("datetime", pymongo.ASCENDING)], unique=True)
+# ground_truth_collection.create_index([("datetime", pymongo.ASCENDING)], unique=True)
 
 # Imagery collection.
 imagery_collection = db.imagery

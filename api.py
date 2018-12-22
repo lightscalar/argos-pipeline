@@ -26,7 +26,7 @@ import io
 
 PORT = 2005
 app = Flask(__name__)
-CORS(app)
+CORS(app, send_wildcard=True)
 api = Api(app)
 
 
