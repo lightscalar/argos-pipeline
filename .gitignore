@@ -10,6 +10,8 @@ saved_model/
 *.h5
 *.tif
 *.swp
+*.kml
+*.tfw
 
 # MAC
 *.DS_Store

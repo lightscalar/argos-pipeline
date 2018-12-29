@@ -106,7 +106,14 @@ def match_image_to_map(
     keyPoints2, descriptors2 = sift.detectAndCompute(image_array, None)
 
     # Create brute-force matcher object
-    bf = cv2.BFMatcher()
+    # bf = cv2.BFMatcher()
+
+    # FLANN parameters
+    FLANN_INDEX_KDTREE = 0
+    index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+    search_params = dict(checks=50)  # or pass empty dictionary
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
+    matches = flann.knnMatch(descriptors1, descriptors2, k=2)
 
     # Match the descriptors
     try:
@@ -114,11 +121,12 @@ def match_image_to_map(
         matches = bf.knnMatch(descriptors1, descriptors2, k=2)
         good_matches = []
         for m, n in matches:
-            if m.distance < 0.7 * n.distance:
+            if m.distance < 0.90 * n.distance:
                 good_matches.append(m)
     except:
         print("> Match generation failed.")
         good_matches = []
+    debug()
 
     # Apply the homography transformation if we have enough good matches
     MIN_MATCH_COUNT = 5
@@ -211,6 +219,8 @@ class GeoReferencer(object):
         self.image_left = image_left
         self.map_lower = map_lower
         self.map_left = map_left
+        self.image_filename = image_filename
+        self.map_filename = map_filename
         if self.M is not None:
             self.Minv = np.linalg.inv(self.M)
         self.ortho_obj = gdal.Open(map_filename)
@@ -270,14 +280,10 @@ class GeoReferencer(object):
 if __name__ == "__main__":
     from glob import glob
 
-    path_to_image = ""
-    path_to_map = ""
-    map_filename = "MinerStreetSmall.tif"
-    image_filename = "DJI_0468.JPG"
-    maps = get_maps()
-    path_to_map = prepend_argos_root(maps[0]["path_to_geomap"])
-    path_to_site = "/".join(path_to_map.split("/")[:-2])
-    path_to_images = glob(f"{path_to_site}/images/*.JPG")
-    path_to_image = path_to_images[30]
+    image_list = imagery_collection.find({"map_id": "2018-07-06-st_johns_marsh-66"})
+    image_obj = image_list[952]
+    path_to_map = prepend_argos_root(image_obj["path_to_map"])
+    path_to_image = prepend_argos_root(image_obj["path_to_image"])
+
     homography = match_image_to_map(path_to_image, path_to_map, make_picture=True)
-    gr = GeoReferencer(path_to_image, path_to_map)
+    # gr = GeoReferencer(path_to_image, path_to_map)

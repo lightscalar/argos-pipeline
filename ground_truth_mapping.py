@@ -196,7 +196,7 @@ if __name__ == "__main__":
 
     if test_imgs:
         image_list = list(imagery_collection.find({}))
-        image_obj = image_list[19]
+        image_obj = image_list[1954]
         path_to_image = prepend_argos_root(image_obj["path_to_image"])
         package = place_ground_truth_on_image(image_obj)
         nearby_truth = package["nearby_truth"]

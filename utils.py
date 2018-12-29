@@ -15,14 +15,6 @@ import re
 from tqdm import tqdm
 
 
-try:
-    maps = Vessel("data/maps.dat")
-    id_to_plant = maps.id_to_plant
-    plant_to_id = maps.plant_to_id
-except:
-    pass
-
-
 def make_image_name(image_object):
     """Make a reasonable image name to hold all the annotations for that image."""
     date = image_object["date"]
