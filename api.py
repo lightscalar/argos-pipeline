@@ -134,8 +134,7 @@ class ImageAnnotations(Resource):
         """Add the provided annotation to the database."""
         data = request.json
         db.add_annotation(data)
-        annotations = db.get_annotations_for_tile(data["tile_id"])
-        return annotations
+        return db.get_annotations_for_tile(data["tile_id"])
 
 
 class ImageAnnotation(Resource):

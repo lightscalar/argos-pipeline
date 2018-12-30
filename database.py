@@ -79,7 +79,7 @@ class Database:
     def update_target(self, target):
         """Update the target."""
         target_ = self.targets.find_one({"scientific_name": target["scientific_name"]})
-        target_collection.update_one(
+        self.targets.update_one(
             {"_id": target_["_id"]}, {"$set": target}, upsert=False
         )
 
