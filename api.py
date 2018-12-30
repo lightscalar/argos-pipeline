@@ -1,12 +1,6 @@
 """Provide an API endpoint for the QuoteMachine."""
-# from match_groundtruth import *
 from database import *
-from ground_truth_mapping import (
-    place_ground_truth_on_map,
-    convert_map_coord_to_lat_lon,
-    place_ground_truth_on_image,
-    create_machine_truth,
-)
+from models import *
 from utils import *
 
 from bson import ObjectId
@@ -35,8 +29,7 @@ class Maps(Resource):
 
     def get(self):
         """Maps list is loaded when server boots up."""
-        maps = list(map_collection.find({}, {"_id": 0}))
-        return sorted(maps, key=lambda x: x["start"])
+        return db.get_maps()
 
 
 class Map(Resource):
@@ -44,15 +37,9 @@ class Map(Resource):
 
     def get(self, map_id):
         """Maps list is loaded when server boots up."""
-        tgt_map = get_map(map_id)
-        truth = place_ground_truth_on_map(tgt_map)
-        return {
-            "map": tgt_map,
-            "nearby_truth": truth["nearby_truth"],
-            "unique_truth": truth["unique_truth"],
-            "image_rows": truth["image_rows"],
-            "image_cols": truth["image_cols"],
-        }
+        tgt_map = db.get_map(map_id)
+        map_obj = MapModel(tgt_map)
+        return map_obj.package()
 
 
 class GroundTruths(Resource):
@@ -62,8 +49,7 @@ class GroundTruths(Resource):
         """Create a new post-field ground truth point."""
         data = request.json
         new_truth = create_machine_truth(data)
-        ground_truth_collection.insert_one(new_truth)
-        ball_trees["truth"] = build_truth_tree()  # rebuild truth ball tree
+        db.add_ground_truth(new_truth)
         return 200
 
 
@@ -72,7 +58,7 @@ class GroundTruth(Resource):
 
     def delete(self, image_id):
         """Delete all post-field ground truth from given image."""
-        ground_truth_collection.delete_many({"image_id": image_id})
+        db.delete_ground_truth_for_tile(image_id)
         return 200
 
 
@@ -81,18 +67,16 @@ class Targets(Resource):
 
     def get(self):
         """Grab existing global targets."""
-        return sorted(
-            target_collection.find({}, {"_id": 0}), key=lambda x: x["scientific_name"]
-            ), 200, {'Access-Control-Allow-Origin': '*'} 
+        return db.get_targets()
 
     def post(self):
         """Add a new target."""
         target = request.json
         try:
-            target_collection.insert_one(target)
+            db.targets.insert_one(target)
         except:
             print("Sorry. Target already exists.")
-        targets = list(target_collection.find({}, {"_id": 0}))
+        targets = db.get_targets()
         return targets, 200
 
 
@@ -102,12 +86,8 @@ class Target(Resource):
     def put(self, target_id):
         """Update a target."""
         target = request.json
-        out = target_collection.update_one(
-            {"scientific_name": target["scientific_name"]},
-            {"$set": target},
-            upsert=False,
-        )
-        targets = list(target_collection.find({}, {"_id": 0}))
+        db.update_target(target)
+        targets = db.get_targets()
         return targets, 200
 
     def delete(self, target_id):
@@ -122,10 +102,12 @@ class Images(Resource):
 
     def get(self, map_id):
         """Return a list of all images near given lat/lon on given map."""
-        col = float(request.args.get("col"))
-        row = float(request.args.get("row"))
-        map_lat, map_lon = convert_map_coord_to_lat_lon(col, row, map_id)
-        return nearby_images(map_lat, map_lon, map_id=map_id)
+        alpha = float(request.args.get("alpha"))  # height
+        beta = float(request.args.get("beta"))  # width
+        cmap = db.get_map(map_id)
+        map_model = MapModel(cmap)
+        nearest_tile = map_model.find_nearest_tile(alpha, beta)
+        return [nearest_tile.tile_id]
 
 
 class Image(Resource):
@@ -133,28 +115,26 @@ class Image(Resource):
 
     def get(self, image_id):
         """Load the image and map associated ground truth."""
-        image_obj = get_image(image_id)
-        image_obj["truth"] = place_ground_truth_on_image(image_obj)
-        return image_obj
+        tile_obj = db.get_tile(image_id)
+        tile_model = TileModel(tile_obj)
+        return tile_model.package()
+        # image_obj = get_image(image_id)
+        # image_obj["truth"] = place_ground_truth_on_image(image_obj)
+        # return image_obj
 
 
 class ImageAnnotations(Resource):
     """Handle annotation saving, etc."""
 
     def get(self, image_id):
-        annotations = annotation_collection.find({"image_id": image_id})
+        annotations = db.annotations.find({"tile_id": image_id})
         return annotations
 
     def post(self):
         """Add the provided annotation to the database."""
         data = request.json
-        try:
-            annotations_collection.insert_one(data)
-        except:
-            print("Sorry, that point is already annotated.")
-        annotations = list(
-            annotations_collection.find({"image_id": data["image_id"]}, {"_id": 0})
-        )
+        db.add_annotation(data)
+        annotations = db.get_annotations_for_tile(data["tile_id"])
         return annotations
 
 
@@ -162,15 +142,13 @@ class ImageAnnotation(Resource):
     """Returns annotations for a specific image."""
 
     def get(self, image_id):
-        annotations = list(
-            annotations_collection.find({"image_id": image_id}, {"_id": 0})
-        )
-        return annotations
+        """Return all available annotations for a specfic image."""
+        return db.get_annotations_for_tile(image_id)
 
     def delete(self, image_id):
         """Delete specified annotation from database."""
-        annotations_collection.delete_many({"image_id": image_id})
-        return list(annotations_collection.find({"image_id": image_id})), 200
+        db.delete_annotations_for_tile(image_id)
+        return db.get_annotations_for_tile(image_id), 200
 
 
 class Annotation(Resource):
@@ -178,10 +156,10 @@ class Annotation(Resource):
 
     def delete(self, annotation_id):
         """Delete an individual annotation."""
-        annotation = annotations_collection.find_one({"annotation_id": annotation_id})
-        image_id = annotation["image_id"]
-        annotations_collection.delete_one({"annotation_id": annotation_id})
-        return list(annotations_collection.find({"image_id": image_id}, {"_id": 0}))
+        annotation = db.get_annotation(annotation_id)
+        db.delete_annotation(annotation_id)
+        tile_id = annotation["tile_id"]
+        return db.get_annotations_for_tile(tile_id)
 
 
 # Define endpoints.
@@ -201,8 +179,7 @@ api.add_resource(GroundTruth, "/truths/<image_id>", methods=["DELETE"])
 if __name__ == "__main__":
     from getpass import getuser
 
-    if getuser() == 'mjl':
+    if getuser() == "mjl":
         wsgi.server(eventlet.listen(("localhost", PORT)), app)
-    elif getuser() == 'mlewis': # we're on Zee
+    elif getuser() == "mlewis":  # we're on Zee
         wsgi.server(eventlet.listen(("192.168.40.5", PORT)), app)
-

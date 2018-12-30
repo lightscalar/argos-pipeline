@@ -163,7 +163,7 @@ def place_ground_truth_on_map(map_obj):
 
 def create_machine_truth(truth):
     """Create a new ground truth annotation."""
-    image_id = truth["image_id"]
+    tile_id = truth["image_id"]
     image_obj = get_image(image_id)
     path_to_map = prepend_argos_root(image_obj["path_to_map"])
     path_to_image = prepend_argos_root(image_obj["path_to_image"])

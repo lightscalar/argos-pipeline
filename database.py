@@ -50,12 +50,18 @@ class Database:
         self.annotations.create_index(
             [("annotation_id", pymongo.ASCENDING)], unique=True
         )
-        self.build_image_tree()
+        # self.build_image_tree()
+        self.build_tile_tree()
         self.build_truth_tree()
+
+    def get_tile(self, tile_id):
+        """Retrieve a tile via its tile_id."""
+        return self.tiles.find_one({"tile_id": tile_id}, {"_id": 0})
 
     def get_tiles(self):
         """Return a list of available tiles."""
-        return list(self.tiles.find({}, {"_id": 0}))
+        tiles = list(self.tiles.find({}, {"_id": 0}))
+        return sorted(tiles, key=lambda x: x["tile_id"])
 
     def insert_tile(self, tile_obj):
         """Add a new tile to the database."""
@@ -63,22 +69,37 @@ class Database:
 
     def get_targets(self):
         """Return annotation targets."""
-        return list(self.targets.find({}))
+        targets = list(self.targets.find({}, {"_id": 0}))
+        return sorted(targets, key=lambda x: x["scientific_name"])
 
     def get_target(self, target_id):
         """Return specified target (target_id is scientific name)."""
         return self.targets.find_one({"scientific_name": target_id})
 
+    def update_target(self, target):
+        """Update the target."""
+        target_ = self.targets.find_one({"scientific_name": target["scientific_name"]})
+        target_collection.update_one(
+            {"_id": target_["_id"]}, {"$set": target}, upsert=False
+        )
+
+    def delete_target(self, target_id):
+        """Delete the specified target."""
+        self.targets.delete_one({"target_id": target_id})
+
     def get_maps(self, return_id=False):
         """Return list of maps."""
         if return_id:  # return _id too
-            return list(self.maps.find({}))
+            maps = list(self.maps.find({}))
+            maps = sorted(maps, key=lambda x: x["start"])
         else:  # skip the _id
-            return list(self.maps.find({}, {"_id": 0}))
+            maps = list(self.maps.find({}, {"_id": 0}))
+            maps = sorted(maps, key=lambda x: x["start"])
+        return maps
 
     def get_map(self, map_id):
         """Return specified map object."""
-        return self.maps.find_one({"map_id": map_id})
+        return self.maps.find_one({"map_id": map_id}, {"_id": 0})
 
     def update_map(self, map_obj):
         """Update the specified map object."""
@@ -100,7 +121,7 @@ class Database:
 
     def get_ground_truths(self):
         """Return all available ground truth."""
-        truths = list(self.ground_truths.find({}))
+        truths = list(self.ground_truths.find({}, {"_id": 0}))
         truths = sorted(truths, key=lambda x: x["datetime"])
         return truths
 
@@ -108,13 +129,41 @@ class Database:
         """Return all available ground truth."""
         return list(self.ground_truths.find_one({"ground_truth_id": ground_truth_id}))
 
+    def add_ground_truth(self, truth):
+        self.ground_truths.insert_one(truth)
+        self.build_truth_tree()  # now more truths around, so rebuild
+
+    def delete_ground_truth_for_tile(self, tile_id):
+        """Delete all manual ground truth on specified tile."""
+        self.ground_truths.delete_many({"tile_id": tile_id})
+        self.build_truth_tree()  # because there's missing data
+
+    def get_annotation(self, annotation_id):
+        """Find specified annotation."""
+        return self.annotations.find_one({"annotation_id": annotation_id})
+
     def get_annotations(self):
         """List all annotations."""
-        return list(self.annotations.find({}))
+        return list(self.annotations.find({}, {"_id": 0}))
 
-    def get_annotations_by_image_id(self, image_id):
-        """Return all annotations associated with specific image."""
-        return list(self.annotations.find({"image_id": image_id}))
+    def get_annotations_for_tile(self, tile_id):
+        """List all annotations."""
+        return list(self.annotations.find({"tile_id": tile_id}, {"_id": 0}))
+
+    def delete_annotations_for_tile(self, tile_id):
+        """Delete all annotations for specified tile."""
+        self.annotations.delete_many({"tile_id": tile_id})
+
+    def delete_annotation(self, annotation_id):
+        """Delete an individual annotation."""
+        self.annotations.delete_one({"annotation_id": annotation_id})
+
+    def add_annotation(self, data):
+        """Insert an annotation into the database."""
+        try:
+            self.annotations.insert_one(data)
+        except:
+            print("> Sorry, that point is already annotated.")
 
     def build_image_tree(self):
         """Compute a BallTree object for images in the database."""
@@ -124,6 +173,17 @@ class Database:
             self.image_tree = BallTree(image_locations)
         else:
             self.image_tree = None
+
+    def build_tile_tree(self):
+        """Build a BallTree for organizing the tiles in space."""
+        tiles = self.get_tiles()
+        tile_locations = np.array(
+            [
+                [(t["north"] + t["south"]) / 2, (t["east"] + t["west"]) / 2]
+                for t in tiles
+            ]
+        )
+        self.tile_tree = BallTree(tile_locations)
 
     def build_truth_tree(self):
         """Compute a BallTree object for all ground truth in the database."""
