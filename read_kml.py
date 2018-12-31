@@ -116,12 +116,20 @@ def process_tiles(path_to_tiles, tile_size=2048):
     tiles = sorted(tiles)
     for tile_number, path_to_tile in enumerate(tqdm(tiles)):
         split_tile(path_to_tile, tile_number=tile_number)
-
     return tiles
 
 
 if __name__ == "__main__":
-    path_to_tiles = f"{ARGOS_ROOT}/2018/08/03/st_johns_marsh/66/tiles"
+
+    # Get all the maps. ALL OF THEM!
+    maps = db.get_maps()
+
+    for itr, map_dict in enumerate(maps):
+        if itr in [6, 12]:
+            print(f"Processing map {map_dict['map_id']}")
+            path_to_tiles = prepend_argos_root(map_dict["path_to_tiles"])
+            tiles = process_tiles(path_to_tiles)
+    # path_to_tiles = f"{ARGOS_ROOT}/2018/08/03/st_johns_marsh/66/tiles"
     # tiles = glob("imgs/tiles/*.tif")
     # split_tile(tiles[0])
     # tiles = process_tiles(path_to_tiles)

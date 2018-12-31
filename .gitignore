@@ -12,6 +12,7 @@ saved_model/
 *.swp
 *.kml
 *.tfw
+*.export
 
 # MAC
 *.DS_Store
