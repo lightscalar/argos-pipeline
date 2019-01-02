@@ -183,7 +183,8 @@ class Database:
                 for t in tiles
             ]
         )
-        self.tile_tree = BallTree(tile_locations)
+        if len(tile_locations)>0:
+            self.tile_tree = BallTree(tile_locations)
 
     def build_truth_tree(self):
         """Compute a BallTree object for all ground truth in the database."""

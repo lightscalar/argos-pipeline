@@ -118,9 +118,18 @@ class Image(Resource):
         tile_obj = db.get_tile(image_id)
         tile_model = TileModel(tile_obj)
         return tile_model.package()
-        # image_obj = get_image(image_id)
-        # image_obj["truth"] = place_ground_truth_on_image(image_obj)
-        # return image_obj
+
+
+class Navigate(Resource):
+    """Navigate to a neighboring tile."""
+
+    def get(self, tile_id):
+        """Return the neighboring tile in the specified direction."""
+        direction = request.args.get("direction")  # height
+        tile_obj = db.get_tile(tile_id)
+        tile_model = TileModel(tile_obj)
+        neighbor_tile = tile_model.get_neighbor(direction)
+        return neighbor_tile.package()
 
 
 class ImageAnnotations(Resource):
@@ -173,6 +182,7 @@ api.add_resource(ImageAnnotation, "/annotations/<image_id>", methods=["GET", "DE
 api.add_resource(Annotation, "/annotation/<annotation_id>", methods=["DELETE"])
 api.add_resource(GroundTruths, "/truths", methods=["POST"])
 api.add_resource(GroundTruth, "/truths/<image_id>", methods=["DELETE"])
+api.add_resource(Navigate, "/tiles/<tile_id>", methods=["GET"])
 
 
 if __name__ == "__main__":

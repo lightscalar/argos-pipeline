@@ -234,6 +234,30 @@ class TileModel:
         package["truth"] = {"nearby": nearby_truth, "unique": unique_truth}
         return package
 
+    def get_neighbor(self, direction):
+        """Get the neighboring tile in the specified direction."""
+        map_id = self.map_id
+        tiles = db.get_tiles()
+        if direction == "north":
+            alpha = -0.5
+            beta = 0.5
+        elif direction == "south":
+            alpha = 1.5
+            beta = 0.5
+        elif direction == "west":
+            alpha = 0.5
+            beta = -0.5
+        elif direction == "east":
+            alpha = 0.5
+            beta = 1.5
+        lat, lon = self.to_lat_lon(alpha, beta)
+        _, ordered_truth = db.tile_tree.query([[lat, lon]], k=100)
+        ordered_truth = ordered_truth[0]
+        for idx in ordered_truth:
+            tile = TileModel(tiles[idx])
+            if tile.map_id == map_id:
+                return tile
+
 
 if __name__ == "__main__":
 
