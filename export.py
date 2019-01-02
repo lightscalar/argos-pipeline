@@ -15,7 +15,7 @@ def export_data(path_to_export_file):
     v.save()
 
 
-def import_data(path_to_import_file, do_not_import=[], reset=[]):
+def import_data(path_to_import_file, do_not_import=[], replace=[]):
     """Import data into the database."""
     v = Vessel(path_to_import_file)
 
