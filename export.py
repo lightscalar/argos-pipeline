@@ -29,7 +29,7 @@ def import_data(path_to_import_file, do_not_import=[], reset=[]):
             print("> Existing maps were not inserted.")
 
     # Import targets.
-    if targets not in do_not_import:
+    if 'targets' not in do_not_import:
         try:
             if 'targets' in replace:
                 db.tiles.delete_many({})
