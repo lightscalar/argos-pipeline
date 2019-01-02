@@ -23,7 +23,7 @@ def import_data(path_to_import_file, do_not_import=[], replace=[]):
     if 'maps' not in do_not_import:
         try:
             if 'maps' in replace:
-                db.tiles.delete_many({})
+                db.maps.delete_many({})
             db.maps.insert_many(v.maps, ordered=False)
         except:
             print("> Existing maps were not inserted.")
@@ -32,7 +32,7 @@ def import_data(path_to_import_file, do_not_import=[], replace=[]):
     if 'targets' not in do_not_import:
         try:
             if 'targets' in replace:
-                db.tiles.delete_many({})
+                db.targets.delete_many({})
             db.targets.insert_many(v.targets, ordered=False)
         except:
             print("> Existing targets were not inserted.")
@@ -41,7 +41,7 @@ def import_data(path_to_import_file, do_not_import=[], replace=[]):
     if 'imagery' not in do_not_import:
         try:
             if 'imagery' in replace:
-                db.tiles.delete_many({})
+                db.imagery.delete_many({})
             db.imagery.insert_many(v.imagery, ordered=False)
         except:
             print("> Existing imagery was not inserted.")
@@ -50,7 +50,7 @@ def import_data(path_to_import_file, do_not_import=[], replace=[]):
     if 'ground_truth' not in do_not_import:
         try:
             if 'ground_truth' in replace:
-                db.tiles.delete_many({})
+                db.ground_truth.delete_many({})
             db.ground_truth.insert_many(v.ground_truth, ordered=False)
         except:
             print("> Existing ground truths were not inserted.")
@@ -59,7 +59,7 @@ def import_data(path_to_import_file, do_not_import=[], replace=[]):
     if 'annotations' not in do_not_import:
         try:
             if 'annotations' in replace:
-                db.tiles.delete_many({})
+                db.annotations.delete_many({})
             db.annotations.insert_many(v.annotations, ordered=False)
         except:
             print("> Existing annotations were not inserted.")
