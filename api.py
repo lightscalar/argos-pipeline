@@ -58,7 +58,7 @@ class GroundTruth(Resource):
 
     def delete(self, image_id):
         """Delete all post-field ground truth from given image."""
-        db.delete_ground_truth_for_tile(image_id)
+        db.delete_ground_truth_for_image(image_id)
         return 200
 
 
@@ -106,8 +106,8 @@ class Images(Resource):
         beta = float(request.args.get("beta"))  # width
         cmap = db.get_map(map_id)
         map_model = MapModel(cmap)
-        nearest_tile = map_model.find_nearest_tile(alpha, beta)
-        return [nearest_tile.tile_id]
+        nearest_image = map_model.find_nearest_image(alpha, beta)
+        return [nearest_image.image_id]
 
 
 class Image(Resource):
@@ -115,35 +115,35 @@ class Image(Resource):
 
     def get(self, image_id):
         """Load the image and map associated ground truth."""
-        tile_obj = db.get_tile(image_id)
-        tile_model = TileModel(tile_obj)
-        return tile_model.package()
+        image_dict = db.get_image(image_id)
+        image_model = ImageModel(image_dict)
+        return image_model.package()
 
 
 class Navigate(Resource):
-    """Navigate to a neighboring tile."""
+    """Navigate to a neighboring image."""
 
-    def get(self, tile_id):
-        """Return the neighboring tile in the specified direction."""
+    def get(self, image_id):
+        """Return the neighboring image in the specified direction."""
         direction = request.args.get("direction")  # height
-        tile_obj = db.get_tile(tile_id)
-        tile_model = TileModel(tile_obj)
-        neighbor_tile = tile_model.get_neighbor(direction)
-        return neighbor_tile.package()
+        image_dict = db.get_image(image_id)
+        image_model = ImageModel(image_dict)
+        neighbor_image = image_model.get_neighbor(direction)
+        return neighbor_image.package()
 
 
 class ImageAnnotations(Resource):
     """Handle annotation saving, etc."""
 
     def get(self, image_id):
-        annotations = db.annotations.find({"tile_id": image_id})
+        annotations = db.annotations.find({"image_id": image_id})
         return annotations
 
     def post(self):
         """Add the provided annotation to the database."""
         data = request.json
         db.add_annotation(data)
-        return db.get_annotations_for_tile(data["tile_id"])
+        return db.get_annotations_for_image(data["image_id"])
 
 
 class ImageAnnotation(Resource):
@@ -151,12 +151,12 @@ class ImageAnnotation(Resource):
 
     def get(self, image_id):
         """Return all available annotations for a specfic image."""
-        return db.get_annotations_for_tile(image_id)
+        return db.get_annotations_for_image(image_id)
 
     def delete(self, image_id):
         """Delete specified annotation from database."""
-        db.delete_annotations_for_tile(image_id)
-        return db.get_annotations_for_tile(image_id), 200
+        db.delete_annotations_for_image(image_id)
+        return db.get_annotations_for_image(image_id), 200
 
 
 class Annotation(Resource):
@@ -166,8 +166,8 @@ class Annotation(Resource):
         """Delete an individual annotation."""
         annotation = db.get_annotation(annotation_id)
         db.delete_annotation(annotation_id)
-        tile_id = annotation["tile_id"]
-        return db.get_annotations_for_tile(tile_id)
+        image_id = annotation["image_id"]
+        return db.get_annotations_for_image(image_id)
 
 
 # Define endpoints.
@@ -182,7 +182,7 @@ api.add_resource(ImageAnnotation, "/annotations/<image_id>", methods=["GET", "DE
 api.add_resource(Annotation, "/annotation/<annotation_id>", methods=["DELETE"])
 api.add_resource(GroundTruths, "/truths", methods=["POST"])
 api.add_resource(GroundTruth, "/truths/<image_id>", methods=["DELETE"])
-api.add_resource(Navigate, "/tiles/<tile_id>", methods=["GET"])
+api.add_resource(Navigate, "/images/navigate/<image_id>", methods=["GET"])
 
 
 if __name__ == "__main__":

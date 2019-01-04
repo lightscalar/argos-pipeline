@@ -143,8 +143,20 @@ class MapModel:
         package["truth"] = {"nearby": nearby_truth, "unique": unique_truth}
         return package
 
+    def find_nearest_image(self, alpha, beta, nb_tiles=1000):
+        """Return the ImageModel of the tile nearest given alpha/beta coordinates."""
+        lat, lon = self.to_lat_lon(alpha, beta)
+        all_images = db.get_images()
+        _, nearest_images = db.image_tree.query([[lat, lon]], k=nb_tiles)
+        nearest_images = nearest_images[0]
+        for image_idx in nearest_images:
+            image = all_images[image_idx]
+            i = ImageModel(image)
+            if i.map_id == self.map_id:
+                return i
+
     def find_nearest_tile(self, alpha, beta, nb_tiles=100):
-        """Return ID of tile nearest given alpha/beta coordinates."""
+        """Return TileModel of tile nearest given alpha/beta coordinates."""
         lat, lon = self.to_lat_lon(alpha, beta)
         all_tiles = db.get_tiles()
         _, nearest_tiles = db.tile_tree.query([[lat, lon]], k=nb_tiles)

@@ -79,9 +79,7 @@ class Database:
     def update_target(self, target):
         """Update the target."""
         target_ = self.targets.find_one({"scientific_name": target["scientific_name"]})
-        self.targets.update_one(
-            {"_id": target_["_id"]}, {"$set": target}, upsert=False
-        )
+        self.targets.update_one({"_id": target_["_id"]}, {"$set": target}, upsert=False)
 
     def delete_target(self, target_id):
         """Delete the specified target."""
@@ -107,8 +105,8 @@ class Database:
 
     def get_images(self):
         """Return a list of all images."""
-        images = list(self.imagery.find({}))
-        images = sorted(images, key=lambda x:x['image_id'])
+        images = list(self.imagery.find({}, {"_id": 0}))
+        images = sorted(images, key=lambda x: x["image_id"])
         return images
 
     def get_image_locations(self):
@@ -119,7 +117,7 @@ class Database:
 
     def get_image(self, image_id):
         """Return specified image object."""
-        return self.imagery.find_one({"image_id": image_id})
+        return self.imagery.find_one({"image_id": image_id}, {"_id": 0})
 
     def get_ground_truths(self):
         """Return all available ground truth."""
@@ -135,6 +133,11 @@ class Database:
         self.ground_truths.insert_one(truth)
         self.build_truth_tree()  # now more truths around, so rebuild
 
+    def delete_ground_truth_for_image(self, image_id):
+        """Delete all manual ground truth on specified tile."""
+        self.ground_truths.delete_many({"image_id": image_id})
+        self.build_truth_tree()  # because there's missing data
+
     def delete_ground_truth_for_tile(self, tile_id):
         """Delete all manual ground truth on specified tile."""
         self.ground_truths.delete_many({"tile_id": tile_id})
@@ -144,9 +147,22 @@ class Database:
         """Find specified annotation."""
         return self.annotations.find_one({"annotation_id": annotation_id})
 
-    def get_annotations(self):
+    def get_annotations(self, return_id=False):
         """List all annotations."""
-        return list(self.annotations.find({}, {"_id": 0}))
+        if return_id:
+            annotations = list(self.annotations.find({}))
+        else:
+            annotations = list(self.annotations.find({}, {"_id": 0}))
+        annotations = sorted(annotations, key=lambda x: x["annotation_id"])
+        return annotations
+
+    def get_annotations_for_image(self, image_id):
+        """List all annotations."""
+        return list(self.annotations.find({"image_id": image_id}, {"_id": 0}))
+
+    def delete_annotations_for_image(self, image_id):
+        """Delete all annotations for specified tile."""
+        self.annotations.delete_many({"image_id": image_id})
 
     def get_annotations_for_tile(self, tile_id):
         """List all annotations."""
@@ -167,6 +183,10 @@ class Database:
         except:
             print("> Sorry, that point is already annotated.")
 
+    def update_annotation(self, data):
+        """Update an existing annotation."""
+        self.annotations.update_one({"_id": data["_id"]}, {"$set": data}, upsert=False)
+
     def build_image_tree(self):
         """Compute a BallTree object for images in the database."""
         images = self.get_image_locations()
@@ -185,7 +205,7 @@ class Database:
                 for t in tiles
             ]
         )
-        if len(tile_locations)>0:
+        if len(tile_locations) > 0:
             self.tile_tree = BallTree(tile_locations)
 
     def build_truth_tree(self):
