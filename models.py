@@ -341,7 +341,7 @@ class ImageModel:
             elif direction == "east":
                 if image["lon"] > self.lon:
                     direction_satisfied = True
-            # If appropriately shifted, return this guy (in object form).
+            # If appropriately shifted, return current image (in object form).
             if direction_satisfied:
                 return ImageModel(image)
 
