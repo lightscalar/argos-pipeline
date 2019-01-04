@@ -37,9 +37,8 @@ def unit_vectors(exif_obj):
     camera_yaw = exif_obj["camera_yaw"]
     lat, lon = exif_obj["img_lat"], exif_obj["img_lon"]
     declination = geomag.declination(lat, lon)
-    camera_yaw -= declination  # compensate for magnetic variation
-    print(camera_yaw)
-    alpha = -camera_yaw * np.pi / 180
+    camera_yaw += declination  # compensate for magnetic variation
+    alpha = camera_yaw * np.pi / 180
     n = [-np.cos(alpha), -np.sin(alpha)]
     e = [-np.sin(alpha), np.cos(alpha)]
     return np.array(n), np.array(e)
@@ -62,9 +61,12 @@ def extract_info(image_file):
     return data
 
 
-def pixel_to_lat_lon(row, col, image_file):
+def pixel_to_lat_lon(row, col, image_file=None, exif_info=None):
     """Convert given pixel position to lat/lon."""
-    d = extract_info(image_file)
+    if exif_info:
+        d = exif_info
+    else:
+        d = extract_info(image_file)
     diagonal_length_in_pixels = np.sqrt(d["img_width"] ** 2 + d["img_height"] ** 2)
     meters_per_pixel = calculate_meters_per_pixel(
         d["field_of_view"], d["relative_altitude"], diagonal_length_in_pixels
@@ -80,11 +82,72 @@ def pixel_to_lat_lon(row, col, image_file):
     meters_per_degree_lat = distance_on_earth(pos, pos + [1, 0])
     meters_per_degree_lon = distance_on_earth(pos, pos + [0, 1])
     dn_in_degrees = dn_in_meters / meters_per_degree_lat
-    de_in_degrees = dn_in_meters / meters_per_degree_lon
+    de_in_degrees = de_in_meters / meters_per_degree_lon
 
     lat = d["img_lat"] + dn_in_degrees
     lon = d["img_lon"] + de_in_degrees
     return lat, lon
+
+
+def alpha_beta_to_lat_lon(alpha, beta, image_file=None, exif_info=None):
+    """Convert given pixel position to lat/lon."""
+    if exif_info:
+        d = exif_info
+    else:
+        d = extract_info(image_file)
+    row = d["img_height"] * alpha
+    col = d["img_width"] * beta
+    diagonal_length_in_pixels = np.sqrt(d["img_width"] ** 2 + d["img_height"] ** 2)
+    meters_per_pixel = calculate_meters_per_pixel(
+        d["field_of_view"], d["relative_altitude"], diagonal_length_in_pixels
+    )
+    # Compute the unit vectors in the north and east directions.
+    # Find dispacement in those directions, given specfied latitude/longitude.
+    n, e = unit_vectors(d)
+    pixel_vector = np.array([row - d["img_height"] / 2, col - d["img_width"] / 2])
+    dn_in_meters = np.dot(pixel_vector, n) * meters_per_pixel
+    de_in_meters = np.dot(pixel_vector, e) * meters_per_pixel
+
+    pos = np.array([d["img_lat"], d["img_lon"]])
+    meters_per_degree_lat = distance_on_earth(pos, pos + [1, 0])
+    meters_per_degree_lon = distance_on_earth(pos, pos + [0, 1])
+    dn_in_degrees = dn_in_meters / meters_per_degree_lat
+    de_in_degrees = de_in_meters / meters_per_degree_lon
+
+    lat = d["img_lat"] + dn_in_degrees
+    lon = d["img_lon"] + de_in_degrees
+    return lat, lon
+
+
+def lat_lon_to_alpha_beta(lat, lon, image_file=None, exif_info=None):
+    """Convert from lat/lon to unit position within the image."""
+    if exif_info:
+        d = exif_info
+    else:
+        d = extract_info(image_file)
+    diagonal_length_in_pixels = np.sqrt(d["img_width"] ** 2 + d["img_height"] ** 2)
+    meters_per_pixel = calculate_meters_per_pixel(
+        d["field_of_view"], d["relative_altitude"], diagonal_length_in_pixels
+    )
+    # Compute the unit vectors in the north and east directions.
+    # Find dispacement in those directions, given specfied latitude/longitude.
+    n, e = unit_vectors(d)
+    pos = np.array([d["img_lat"], d["img_lon"]])
+    meters_per_degree_lat = distance_on_earth(pos - [0.5, 0], pos + [0.5, 0])
+    meters_per_degree_lon = distance_on_earth(pos - [0, 0.5], pos + [0, 0.5])
+    dn_in_meters = (lat - d["img_lat"]) * meters_per_degree_lat
+    de_in_meters = (lon - d["img_lon"]) * meters_per_degree_lon
+
+    # Compute delta in N/S and E/W direction.
+    dn_in_pixels = dn_in_meters / meters_per_pixel
+    de_in_pixels = de_in_meters / meters_per_pixel
+
+    # Projected position is location relative to center of image.
+    ctr_position = np.array([d["img_height"] / 2, d["img_width"] / 2])
+    target_position = ctr_position + (dn_in_pixels * n + de_in_pixels * e)
+    alpha = target_position[0] / d["img_height"]
+    beta = target_position[1] / d["img_width"]
+    return alpha, beta
 
 
 def project_on_image(lat, lon, image_file):
@@ -124,113 +187,62 @@ def in_image(location, image_file: str):
 
 
 if __name__ == "__main__":
+    from database import *
+    from models import *
+    from glob import glob
+    import pylab as plt
 
-    from pylab import *
+    # Try to map a given image back on to a map.
+    maps = db.get_maps()
+    path_to_images = maps[3]["path_to_images"]
+    path_to_images = prepend_argos_root(path_to_images)
+    images = glob(f"{path_to_images}/*.JPG")
+    images = sorted(images)
+    mapm = MapModel(maps[3])
+    map_image = plt.imread(prepend_argos_root(mapm.path_to_map))
 
-    d = extract_info("DJI_0468.JPG")
-    out = project_on_image(d["img_lat"] - 1e-4, d["img_lon"] + 1e-4, "DJI_0468.JPG")
+    def plot_image(image):
+        ul_lat, ul_lon = pixel_to_lat_lon(0, 0, image)
+        ll_lat, ll_lon = pixel_to_lat_lon(3000, 0, image)
+        ur_lat, ur_lon = pixel_to_lat_lon(0, 4000, image)
+        lr_lat, lr_lon = pixel_to_lat_lon(3000, 4000, image)
 
-    img = imread("DJI_0468.JPG")
-    ion()
-    close("all")
-    figure(100)
-    imshow(img)
+        ul_alpha, ul_beta = mapm.to_alpha_beta(ul_lat, ul_lon)
+        ll_alpha, ll_beta = mapm.to_alpha_beta(ll_lat, ll_lon)
+        ur_alpha, ur_beta = mapm.to_alpha_beta(ur_lat, ur_lon)
+        lr_alpha, lr_beta = mapm.to_alpha_beta(lr_lat, lr_lon)
 
-    row, col = project_on_image(d["img_lat"], d["img_lon"], "DJI_0468.JPG")
-    plot(col, row, "ro")
+        map_height, map_width, color_chans = map_image.shape
+        mh, mw = map_height, map_width
 
-    pos = np.array([d["img_lat"], d["img_lon"]])
-    meters_per_degree_lat = distance_on_earth(pos - [0.5, 0], pos + [0.5, 0])
-    meters_per_degree_lon = distance_on_earth(pos - [0, 0.5], pos + [0, 0.5])
+        def make_line(x1, y1, x2, y2):
+            """Create a line between two points."""
+            start = np.array([x1, y1])
+            stop = np.array([x2, y2])
+            alpha = np.linspace(0, 1, 100)
+            points = []
+            for a in alpha:
+                points.append(start * (1 - a) + stop * a)
+            return np.array(points)
 
-    nlat = d["img_lat"] + 5 / meters_per_degree_lat
-    nlon = d["img_lon"] + 5 / meters_per_degree_lon
+        ur_ul_line = make_line(ur_beta * mw, ur_alpha * mh, ul_beta * mw, ul_alpha * mh)
+        ul_ll_line = make_line(ul_beta * mw, ul_alpha * mh, ll_beta * mw, ll_alpha * mh)
+        ll_lr_line = make_line(ll_beta * mw, ll_alpha * mh, lr_beta * mw, lr_alpha * mh)
+        lr_ur_line = make_line(lr_beta * mw, lr_alpha * mh, ur_beta * mw, ur_alpha * mh)
+        plt.plot(ur_ul_line[:, 0], ur_ul_line[:, 1], color="#ffcc33")
+        plt.plot(ul_ll_line[:, 0], ul_ll_line[:, 1], color="#ffcc33")
+        plt.plot(ll_lr_line[:, 0], ll_lr_line[:, 1], color="#ffcc33")
+        plt.plot(lr_ur_line[:, 0], lr_ur_line[:, 1], color="#ffcc33")
+        plt.plot(ul_beta * map_width, ul_alpha * map_height, "ro")
 
-    row, col = project_on_image(nlat, d["img_lon"], "DJI_0468.JPG")
-    plot(col, row, "bo")
+    plt.ion()
+    plt.close("all")
+    plt.imshow(map_image)
+    # image 668 (Aug.03.2018 st_johns_marsh) gives good orientation info.
+    start_image = 667
+    for image in images[start_image : start_image + 1]:
+        plot_image(image)
 
-    n, e = unit_vectors(d)
-    row_ctr = img.shape[0] / 2
-    col_ctr = img.shape[1] / 2
-    ctr = np.array([row_ctr, col_ctr])
-    north = ctr + 500 * n
-    east = ctr + 500 * e
-
-    plt.plot([ctr[1], north[1]], [ctr[0], north[0]], "b-", linewidth=2)
-    plt.plot([ctr[1], east[1]], [ctr[0], east[0]], "r-", linewidth=2)
-
-    # import numpy as np
-    # from skimage import io
-    # from osgeo import gdal, osr
-    # from PIL import Image, ImageFile
-    # import os, sys
-    # import argparse
-
-    # ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-    # # Get command line arguments.
-    # parser = argparse.ArgumentParser(description="Georeference an image.")
-    # parser.add_argument("--filename", type=str, help="filename for image")
-    # parser.add_argument(
-    #     "--filetype", type=str, help="Output file type. pdf or tif.", default="pdf"
-    # )
-    # args = parser.parse_args()
-
-    # # filename = args.filename
-    # filename="DJI_0468.JPG"
-    # print(f"Georeferencing {filename}...")
-
-    # output_file = ""
-
-    # # Build the output filename.
-    # if args.filetype == "pdf":
-    #     output_file = filename[:-4] + ".pdf"
-    # elif args.filetype == "tif":
-    #     output_file = filename[:-4] + ".tif"
-    # else:
-    #     raise ValueError("Filetype not currently supported. Use either pdf or tif.")
-
-    # # Remove any existing file to clear harmful latent metadata.
-    # try:
-    #     os.remove(output_file)
-    # except:
-    #     pass
-
-    # print('Opening image.')
-    # img = Image.open(filename)
-
-    # # Create the new file.
-    # print('Saving the file.')
-    # # if args.filetype == "pdf":
-    # img.save(output_file, "pdf", resolution=100.0)
-    # # elif args.filetype == "tif":
-    # #     img.save(output_file)
-
-    # test_img = io.imread(filename)
-    # img = test_img[0]
-
-    # print('Doing some GDAL stuff.')
-    # ds = gdal.Open(output_file, gdal.GA_Update)
-    # sr = osr.SpatialReference()
-    # sr.SetWellKnownGeogCS("WGS84")
-
-    # # Randomly sample points in the image.
-    # gcp_list = [
-    #     (np.random.randint(img.shape[0]), np.random.randint(img.shape[1]))
-    #     for _ in range(5)
-    # ]
-
-    # print('List complete.')
-
-    # # Create the ground control points with the latitude/longitude coordinates.
-    # gcps = []
-    # for gcp in gcp_list:
-    #     lat, lon = pixel_to_lat_lon(gcp[0], gcp[1], filename)
-    #     print(f"Lat, lon: {lat}, {lon}")
-    #     gcps.append(gdal.GCP(lon, lat, 0, gcp[1], gcp[0]))
-
-    # # Apply the GCPs to the image.
-    # ds.SetProjection(sr.ExportToWkt())
-    # ds.SetGeoTransform(gdal.GCPsToGeoTransform(gcps))
-    # ds = None
-    # print('Complete.')
+    plt.figure()
+    img = plt.imread(images[start_image])
+    plt.imshow(img)

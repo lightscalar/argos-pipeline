@@ -1,5 +1,6 @@
 """Implements classes for import models: tiles, maps, etc."""
 from database import *
+from geo_utils import *
 
 import numpy as np
 
@@ -259,8 +260,92 @@ class TileModel:
                 return tile
 
 
+class ImageModel:
+    """Handle georeferencing, etc., of raw images."""
+
+    def __init__(self, image_dict):
+        """Ingest image dictionary into model object."""
+        self.image_dict = image_dict
+        for key, val in image_dict.items():
+            self.__dict__[key] = val
+        self.exif_info = extract_info(prepend_argos_root(self.path_to_image))
+
+    def to_lat_lon(self, alpha, beta):
+        """Convert image unit coordinates to lat/lon."""
+        row = alpha * self.exif_info["img_height"]
+        col = beta * self.exif_info["img_width"]
+        lat, lon = alpha_beta_to_lat_lon(alpha, beta, exif_info=self.exif_info)
+        return lat, lon
+
+    def to_alpha_beta(self, lat, lon):
+        """Convert from lat/lon back to unit coordinates within the image."""
+        alpha, beta = lat_lon_to_alpha_beta(lat, lon, exif_info=self.exif_info)
+        return alpha, beta
+
+    def in_image(self, alpha, beta):
+        """Determine whether specified point is in the map, or not."""
+        return (alpha >= 0) * (alpha <= 1) * (beta >= 0) * (beta <= 1)
+
+    def find_ground_truth(self):
+        """Find ground truth present on the map and map it to alpha/beta values."""
+        lat, lon = self.to_lat_lon(0.5, 0.5)  # lat/lon of map center
+        _, ordered_truth = db.truth_tree.query([[lat, lon]], k=300)
+        ordered_truth = ordered_truth[0]
+        truths = db.get_ground_truths()
+        targets = db.get_targets()
+        nearby_truths = []
+        for truth_idx in ordered_truth:
+            truth = truths[truth_idx]
+            lat, lon = truth["latlon"]
+            alpha, beta = self.to_alpha_beta(lat, lon)
+            if not self.in_image(alpha, beta):
+                break
+            truth = match_truth_to_target(truth, targets)
+            if truth is not None:
+                truth["alpha"] = alpha  # fraction of image height (rows)
+                truth["beta"] = beta  # fraction of image width (cols)
+                nearby_truths.append(truth)
+        unique_truths = find_unique_truth(nearby_truths)
+        return nearby_truths, unique_truths
+
+    def package(self):
+        """Return JSON-serialiable package for client consumption."""
+        nearby_truth, unique_truth = self.find_ground_truth()
+        package = {}
+        package["image"] = self.image_dict
+        package["truth"] = {"nearby": nearby_truth, "unique": unique_truth}
+        return package
+
+    def get_neighbor(self, direction):
+        """Get the neighboring tile in the specified direction."""
+        map_id = self.map_id
+        image_list = db.get_images()
+        _, nearest_images = db.image_tree.query([[self.lat, self.lon]], k=2000)
+        debug()
+        for idx in nearest_images[0]:
+            image = image_list[idx]
+            this_map = map_id == image["map_id"]
+            if direction == "north" and this_map:
+                if image["lat"] > self.lat:
+                    return image
+            elif direction == "south" and this_map:
+                if image["lat"] < self.lat:
+                    debug()
+                    return image
+            elif direction == "west" and this_map:
+                if image["lon"] < self.lon:
+                    return image
+            elif direction == "east" and this_map:
+                if image["lon"] > self.lon:
+                    return image
+        print(image['map_id'])
+
+
 if __name__ == "__main__":
 
     maps = db.get_maps()
     mp = maps[4]
     mp = MapModel(mp)
+
+    image_list = db.get_images()
+    imm = ImageModel(image_list[645])

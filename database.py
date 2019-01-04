@@ -50,7 +50,7 @@ class Database:
         self.annotations.create_index(
             [("annotation_id", pymongo.ASCENDING)], unique=True
         )
-        # self.build_image_tree()
+        self.build_image_tree()
         self.build_tile_tree()
         self.build_truth_tree()
 
@@ -107,7 +107,9 @@ class Database:
 
     def get_images(self):
         """Return a list of all images."""
-        return list(self.imagery.find({}))
+        images = list(self.imagery.find({}))
+        images = sorted(images, key=lambda x:x['image_id'])
+        return images
 
     def get_image_locations(self):
         """Get image locations from the database."""
