@@ -321,24 +321,21 @@ class ImageModel:
         map_id = self.map_id
         image_list = db.get_images()
         _, nearest_images = db.image_tree.query([[self.lat, self.lon]], k=2000)
-        debug()
         for idx in nearest_images[0]:
             image = image_list[idx]
             this_map = map_id == image["map_id"]
             if direction == "north" and this_map:
                 if image["lat"] > self.lat:
-                    return image
+                    return ImageModel(image)
             elif direction == "south" and this_map:
                 if image["lat"] < self.lat:
-                    debug()
-                    return image
+                    return ImageModel(image)
             elif direction == "west" and this_map:
                 if image["lon"] < self.lon:
-                    return image
+                    return ImageModel(image)
             elif direction == "east" and this_map:
                 if image["lon"] > self.lon:
-                    return image
-        print(image['map_id'])
+                    return ImageModel(image)
 
 
 if __name__ == "__main__":
