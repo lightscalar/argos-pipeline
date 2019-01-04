@@ -323,19 +323,27 @@ class ImageModel:
         _, nearest_images = db.image_tree.query([[self.lat, self.lon]], k=2000)
         for idx in nearest_images[0]:
             image = image_list[idx]
+            # Looking for another image within this map.
             this_map = map_id == image["map_id"]
-            if direction == "north" and this_map:
+            if not this_map:
+                continue
+            direction_satisfied = False
+            # Check to see if new image is shifted appropriately to this one.
+            if direction == "north":
                 if image["lat"] > self.lat:
-                    return ImageModel(image)
-            elif direction == "south" and this_map:
+                    direction_satisfied = True
+            elif direction == "south":
                 if image["lat"] < self.lat:
-                    return ImageModel(image)
-            elif direction == "west" and this_map:
+                    direction_satisfied = True
+            elif direction == "west":
                 if image["lon"] < self.lon:
-                    return ImageModel(image)
-            elif direction == "east" and this_map:
+                    direction_satisfied = True
+            elif direction == "east":
                 if image["lon"] > self.lon:
-                    return ImageModel(image)
+                    direction_satisfied = True
+            # If appropriately shifted, return this guy (in object form).
+            if direction_satisfied:
+                return ImageModel(image)
 
 
 if __name__ == "__main__":
