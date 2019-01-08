@@ -18,6 +18,7 @@ def export_data(path_to_export_file):
 def import_annotations(path_to_import_file):
     """Import annotations to the MongoDB."""
     # Import annotations.
+    v = Vessel(path_to_import_file)
     try:  # to import all; some may fail, but the rest will be inserted.
         db.annotations.insert_many(v.annotations, ordered=False)
     except:

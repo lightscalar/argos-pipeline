@@ -79,6 +79,8 @@ def convert_old_annotation(annotation_dict):
     """Convert old-style annotation to the new format."""
     path_to_image = annotation_dict["local_location"]
     image_id = image_path_to_image_id(path_to_image)
+    if image_id is None:
+        return []
     annotations = []
     for annot in annotation["annotations"]:
         if "plant" not in annot.keys():

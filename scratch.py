@@ -1,22 +1,37 @@
-#!python
+from database import *
+from utils import *
+from vessel import *
 
 import numpy as np
-from fastkde import fastKDE
-import pylab as PP
+import pylab as plt
 
-#Generate two random variables dataset (representing 100000 pairs of datapoints)
-N = int(2e5)
-var1 = 50*np.random.normal(size=N) + 0.1
-var2 = 0.01*np.random.normal(size=N) - 300
 
-# Do the self-consistent density estimate
-myPDF,axes = fastKDE.pdf(var1,var2)
+if __name__ == "__main__":
 
-#Extract the axes from the axis list
-v1,v2 = axes
+    # Load annotations.
+    path_to_annotations = "data/2019.01.07_legacy_annotations.dat"
+    annotations = Vessel(path_to_annotations).annotations
+    nb_annotations = len(annotations)
 
-#Plot contours of the PDF should be a set of concentric ellipsoids centered on
-#(0.1, -300) Comparitively, the y axis range should be tiny and the x axis range
-#should be large
-PP.ion()
-PP.contour(v1,v2,myPDF)
+    # Verify that annotations is working okay.
+    no_image = True
+    while no_image:
+        try:
+            annot_idx = np.random.randint(nb_annotations)
+            annot = annotations[annot_idx]
+            image_dict = parse_image_id(annot["image_id"])
+            image = plt.imread(prepend_argos_root(image_dict["path_to_image"]))
+            no_image = False
+        except:
+            no_image = True
+
+    # Parse the image ID.
+    rows, cols, chans = image.shape
+    row = annot["alpha"] * rows
+    col = annot["beta"] * cols
+    plt.ion()
+    plt.close("all")
+    plt.figure()
+    plt.imshow(image)
+    plt.plot(col, row, "rs")
+    print(annot)
