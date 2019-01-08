@@ -50,6 +50,7 @@ class Database:
         self.annotations.create_index(
             [("annotation_id", pymongo.ASCENDING)], unique=True
         )
+        self.annotations.create_index([("scientific_name", pymongo.ASCENDING)])
         self.build_image_tree()
         self.build_tile_tree()
         self.build_truth_tree()

@@ -35,3 +35,19 @@ if __name__ == "__main__":
     plt.imshow(image)
     plt.plot(col, row, "rs")
     print(annot)
+
+    # Extract tiles from this guy.
+    examples = extract_tiles(image, row, col)
+    plt.figure()
+    for k in range(10):
+        plt.subplot(f"52{k}")
+        fig = plt.imshow(examples[k])
+        fig.axes.get_xaxis().set_visible(False)
+        fig.axes.get_yaxis().set_visible(False)
+
+    pipeline = [
+        {"$sample": {"size": 10000}},
+        {"$match": {"scientific_name": {"$ne":  "Frangula alnus"}}},
+    ]
+
+    samples = list(db.annotations.aggregate(pipeline))

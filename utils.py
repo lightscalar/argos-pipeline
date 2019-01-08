@@ -4,9 +4,13 @@ from geo_utils import extract_info
 from squares import *
 from vessel import Vessel
 
+import cv2
 from datetime import datetime
 from glob import glob
+import imutils
 from ipdb import set_trace as debug
+import numpy as np
+import os
 from osgeo import gdal, osr
 import pylab as plt
 from skimage.io import imread
@@ -345,48 +349,69 @@ def extract_homography_from_image_object(image_obj):
     return (M, image_lower, image_left, map_lower, map_left)
 
 
-if __name__ == "__main__":
+def extract_tiles(img, row, col, size=128, num_rotations=10, jitter_amplitude=10):
+    """Extract rotated tiles from an image."""
 
-    # DEPOT = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/MNFI/FLIGHTS"
-    # date = "2018.08.03"
-    # location = "St Johns Marsh (66)"
-    # location = "Algonac State Park (66)"
-    # path_to_images = f"{DEPOT}/{date}/{location}"
-    # fix_image_filenames(path_to_images)
-    maps = map_summaries()
+    images = []
 
-    # X, y = extract_balanced_tiles("data/annotated_images.dat", 28)
+    row = row + np.random.randint(-jitter_amplitude, jitter_amplitude + 1)
+    col = col + np.random.randint(-jitter_amplitude, jitter_amplitude + 1)
 
-    # create_maps = False
-    # if create_maps:
-    #     create_label_maps("data/annotated_images.dat")
-    # else:
-    #     maps = Vessel("data/label_maps.dat")
+    rows, cols, chans = img.shape
 
-    # # Now extract tiles on an image by image basis.
-    # tile_size = 128
-    # for img_obj in v.annotated_images:
-    #     filename = make_image_name(img_obj)
-    #     path_to_tile_file = f"data/tiles/{filename}"
-    #     td = Vessel(path_to_tile_file)
-    #     td.tiles = np.array([])
-    #     td.labels = []
-    #     img = imread(img_obj["local_location"])[0]
-    #     for annotation in tqdm(img_obj["annotations"]):
-    #         if "plant" not in annotation.keys():
-    #             continue
-    #         plant_name = annotation["plant"]
-    #         col, row = annotation["col"], annotation["row"]
-    #         col_, row_ = (
-    #             col * 4000 / annotation["imageWidth"],
-    #             row * 3000 / annotation["imageHeight"],
-    #         )
-    #         tiles = np.array(create_rotated_pics(img, row_, col_, tile_size, 10))
-    #         if td.tiles.shape[0] > 0:
-    #             td.tiles = np.vstack((td.tiles, tiles))
-    #         else:
-    #             td.tiles = tiles
-    #         for k in range(tiles.shape[0]):
-    #             td.labels.append(label_map_inverse[plant_name])
-    #     debug()
-    #     td.save()
+    shift_right = col < size / 2
+    shift_left = col > cols - size / 2
+    shift_down = row < size / 2
+    shift_up = row > rows - size / 2
+
+    if shift_right + shift_left + shift_down + shift_up > 0:
+        if shift_right:
+            col = size / 2
+        if shift_left:
+            col = cols - size / 2
+        if shift_down:
+            row = size / 2
+        if shift_up:
+            row = rows - size / 2
+        col_low = int(col - size / 2)
+        col_high = int(col + size / 2)
+        row_low = int(row - size / 2)
+        row_high = int(row + size / 2)
+        img_ = img[row_low:row_high, col_low:col_high, :]
+        # images.append(img_)
+
+    elif (
+        col < size * np.sqrt(2) / 2
+        or col > cols - size * np.sqrt(2) / 2
+        or row < size * np.sqrt(2) / 2
+        or row > rows - size * np.sqrt(2) / 2
+    ):
+        col_low = int(col - size / 2)
+        col_high = int(col + size / 2)
+        row_low = int(row - size / 2)
+        row_high = int(row + size / 2)
+        img_ = img[row_low:row_high, col_low:col_high, :]
+        # images.append(img_)
+
+    else:
+        col_low = int(col - np.sqrt(2) * size / 2)
+        col_high = int(col + np.sqrt(2) * size / 2)
+        row_low = int(row - np.sqrt(2) * size / 2)
+        row_high = int(row + np.sqrt(2) * size / 2)
+        #        angle_per_iteration = int(360 / num_rotations)
+        img_ = img[row_low:row_high, col_low:col_high, :]
+
+    ctr = int(np.sqrt(2) * size / 2)
+    ctr_plus = int(ctr + size / 2)
+    ctr_minus = int(ctr - size / 2)
+
+    for itr in range(num_rotations):
+        rotation_angle = np.random.uniform(0, 360)
+        if rotation_angle > 0:
+            rotated_image = imutils.rotate(img_, rotation_angle)
+        else:
+            rotated_image = img_
+        square = rotated_image[ctr_minus:ctr_plus, ctr_minus:ctr_plus, :]
+        images.append(square)
+
+    return images
