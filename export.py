@@ -62,7 +62,7 @@ def import_data(path_to_import_file, do_not_import=[], replace=[]):
         try:
             if "ground_truth" in replace:
                 db.ground_truth.delete_many({})
-            db.ground_truth.insert_many(v.ground_truth, ordered=False)
+            db.ground_truths.insert_many(v.ground_truth, ordered=False)
         except:
             print("> Existing ground truths were not inserted.")
 

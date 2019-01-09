@@ -30,7 +30,7 @@ class CNN:
     ):
         """Set up the basic convolutional neural network model."""
         self.scientific_name = scientific_name
-        self.model_name = model_name = scientific_name.replace(" ", "_")
+        self.model_name = model_name = scientific_name.replace(" ", "_").lower()
         self.model_location = f"{MODEL_LOCATION}/{model_name}.h5"
 
         self.tiles_per_class = tiles_per_class
