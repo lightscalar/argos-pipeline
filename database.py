@@ -103,11 +103,11 @@ class Database:
             [("annotation_id", pymongo.ASCENDING)], unique=True
         )
         self.annotations.create_index([("scientific_name", pymongo.ASCENDING)])
-        if self.imagery.count()>0:
+        if self.imagery.count() > 0:
             self.build_image_tree()
-        if self.tiles.countr()>0
+        if self.tiles.countr() > 0:
             self.build_tile_tree()
-        if self.ground_truths.count()>0:
+        if self.ground_truths.count() > 0:
             self.build_truth_tree()
 
     def get_tile(self, tile_id):
