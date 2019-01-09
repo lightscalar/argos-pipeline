@@ -26,7 +26,7 @@ class CNN:
         samples_per_tile=10,
         nb_epochs_per_iter=25,
         nb_iter=1000,
-        load_model=False,
+        do_load_model=False,
     ):
         """Set up the basic convolutional neural network model."""
         self.scientific_name = scientific_name
@@ -38,7 +38,7 @@ class CNN:
         self.nb_epochs_per_iter = nb_epochs_per_iter
         self.nb_iter = nb_iter
         self.tile_size = tile_size
-        if load_model and len(glob(self.model_location)) > 0:
+        if do_load_model and len(glob(self.model_location)) > 0:
             self.model = load_model(self.model_location)
         else:
             self.build_model()
@@ -122,10 +122,34 @@ class CNN:
             self.model.fit(X, y, epochs=self.nb_epochs_per_iter, validation_split=0.1)
             self.model.save(self.model_location)
 
+    def set_image(self, path_to_image):
+        """Load an image into memory."""
+        self.image = plt.imread(path_to_image)
+        self.image_height, self.image_width, _ = self.image.shape
+
+    def predict(self, alpha, beta, tile_size=128):
+        """Predict class of tile located at position (alpha, beta)."""
+        row = self.image_width * alpha
+        col = self.image_height * beta
+        tile = extract_tiles(
+            self.image, row, col, size=128, num_rotations=1, jitter_amplitude=0
+        )
+        prob = self.model.predict([tile])
+        return prob, tile
+
 
 if __name__ == "__main__":
+    # from pylab import imshow, ion, close
+    # ion()
+    # close('all')
 
     # Instantiate the CNN.
     scientific_name = "Frangula alnus"
-    cnn = CNN(scientific_name)
+    cnn = CNN(scientific_name, do_load_model=True)
     cnn.train_network()  # 28 is code for Phragmites australis...
+
+    # images = db.get_images()
+    # img = images[2137]
+    # path_to_image = prepend_argos_root(img['path_to_image'])
+    # cnn.set_image(path_to_image)
+

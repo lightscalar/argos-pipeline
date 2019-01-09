@@ -65,7 +65,7 @@ def extract_training_tiles(
         # print(f"{nb_positive/nb_tiles_per_class*100}%")
     itr = 0
     while nb_negative < nb_tiles_per_class:
-        X_ = extract_tiles_from_annotation(positive_samples[itr], samples_per_tile)
+        X_ = extract_tiles_from_annotation(negative_samples[itr], samples_per_tile)
         X.extend(X_)
         y.extend([0] * len(X_))
         nb_negative += len(X_)

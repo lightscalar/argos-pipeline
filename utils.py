@@ -408,7 +408,10 @@ def extract_tiles(img, row, col, size=128, num_rotations=10, jitter_amplitude=10
         ctr_minus = int(ctr - size / 2)
 
         for itr in range(num_rotations):
-            rotation_angle = np.random.uniform(0, 360)
+            if itr == 0:  # first image is always un-rotated.
+                rotation_angle = 0
+            else:
+                rotation_angle = np.random.uniform(0, 360)
             if rotation_angle > 0:
                 rotated_image = imutils.rotate(img_, rotation_angle)
             else:
