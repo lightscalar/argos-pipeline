@@ -17,6 +17,58 @@ from sklearn.neighbors import BallTree
 from tqdm import tqdm
 
 
+def extract_tiles_from_annotation(annotation, samples_per_tile):
+    """Open up an image and extract tiles."""
+    image_dict = parse_image_id(annotation["image_id"])
+    try:  # directory may not exist...
+        image = plt.imread(prepend_argos_root(image_dict["path_to_image"]))
+    except:
+        return []
+    # Extract tiles.
+    rows, cols, chans = image.shape
+    row = annotation["alpha"] * rows
+    col = annotation["beta"] * cols
+    tiles = extract_tiles(image, row, col, num_rotations=samples_per_tile)
+    return tiles
+
+
+def extract_training_tiles(
+    scientific_name, tile_size=128, nb_tiles_per_class=1000, samples_per_tile=100
+):
+    """Extract the tiles to create a training batch."""
+    negative_pipeline = [
+        {"$sample": {"size": 3 * nb_tiles_per_class}},
+        {"$match": {"scientific_name": {"$ne": scientific_name}}},
+    ]
+    positive_pipeline = [
+        {"$sample": {"size": 3 * nb_tiles_per_class}},
+        {"$match": {"scientific_name": scientific_name}},
+    ]
+    negative_samples = list(db.annotations.aggregate(negative_pipeline))
+    positive_samples = list(db.annotations.aggregate(positive_pipeline))
+    nb_negative = 0
+    nb_positive = 0
+    X = []
+    y = []
+    itr = 0
+    while nb_positive < nb_tiles_per_class:
+        X_ = extract_tiles_from_annotation(positive_samples[itr], samples_per_tile)
+        X.extend(X_)
+        nb_positive += len(X_)
+        y.extend([1] * len(X_))
+        itr += 1
+        # print(f"{nb_positive/nb_tiles_per_class*100}%")
+    itr = 0
+    while nb_negative < nb_tiles_per_class:
+        X_ = extract_tiles_from_annotation(positive_samples[itr], samples_per_tile)
+        X.extend(X_)
+        y.extend([0] * len(X_))
+        nb_negative += len(X_)
+        itr += 1
+        # print(f"{nb_negative/nb_tiles_per_class*100}%")
+    return np.array(X), np.array(y)
+
+
 class Database:
     """Handle resource CRUD."""
 
@@ -218,133 +270,3 @@ class Database:
 
 # Create the global database!
 db = Database()
-
-# # Open up a database instance.
-# client = MongoClient()
-
-# # Connect to the database.
-# db = client.ARGOS  # database
-
-# # Maps collection.
-# map_collection = db.maps
-
-# # Target collection.
-# target_collection = db.targets
-
-# # Ground truth collection.
-# ground_truth_collection = db.ground_truth
-# # ground_truth_collection.create_index([("datetime", pymongo.ASCENDING)], unique=True)
-
-# # Imagery collection.
-# imagery_collection = db.imagery
-# imagery_collection.create_index([("image_id", pymongo.ASCENDING)], unique=True)
-
-# # Annotations collection.
-# annotations_collection = db.annotations
-# annotations_collection.create_index([("annotation_id", pymongo.ASCENDING)], unique=True)
-
-
-# def extract_image_number(path_to_image):
-#     """Grab the image number from the image name."""
-#     rgx = r"DJI_(\d+).JPG"
-#     file_name = path_to_image.split("/")[-1]
-#     match = re.search(rgx, file_name)
-#     if match is not None:
-#         return match[1]
-
-
-# def get_image_locations():
-#     """Get image locations from the database."""
-#     image_locations = list(imagery_collection.find({}, {"image_id", "lat", "lon"}))
-#     image_locations = sorted(image_locations, key=lambda x: x["image_id"])
-#     return image_locations
-
-
-# def build_truth_tree():
-#     """Compute a BallTree object for all ground truth in the database."""
-#     truths = get_ground_truth()
-#     truth_locations = np.array([[t["latlon"][0], t["latlon"][1]] for t in truths])
-#     truth_tree = BallTree(truth_locations)
-#     return truth_tree
-
-
-# def build_image_tree():
-#     """Compute a BallTree object for images in the database."""
-#     images = get_image_locations()
-#     if len(images) > 0:
-#         image_locations = np.array([[img["lat"], img["lon"]] for img in images])
-#         image_tree = BallTree(image_locations)
-#         return image_tree
-#     else:
-#         return None
-
-
-# def nearby_images(lat, lon, max_number=10, map_id=None):
-#     """Find images nearest to specified lat and lon."""
-#     image_locations = get_image_locations()
-#     if map_id is None:
-#         # If we don't care what map these come from:
-#         distances, image_list = ball_trees["image"].query(
-#             np.array([lat, lon]).reshape(1, -1), k=max_number
-#         )
-#         image_list = image_list[0]
-#         image_ids = [image_locations[idx]["image_id"] for idx in image_list]
-#     else:
-#         # Ensure we are only grabbing images from specified map.
-#         distances, image_list = ball_trees["image"].query(
-#             np.array([lat, lon]).reshape(1, -1), k=100
-#         )
-#         image_list = image_list[0]
-#         image_ids = []
-#         for image_idx in image_list:
-#             image = image_locations[image_idx]
-#             image_info = parse_image_id(image["image_id"])
-#             if image_info["map_id"] == map_id:
-#                 image_ids.append(image["image_id"])
-#             else:
-#                 continue
-#             if len(image_ids) == max_number:
-#                 break
-#     return image_ids
-
-
-# def get_targets():
-#     """List all species in the database."""
-#     target_list = list(target_collection.find({}, {"_id": 0}))
-#     return target_list
-
-
-# def get_ground_truth():
-#     """Return all ground truth."""
-#     gtr = list(ground_truth_collection.find({}, {"_id": 0}))
-#     gtr = sorted(gtr, key=lambda x: x["datetime"])
-#     return gtr
-
-
-# def get_image(image_id):
-#     """Find an image based on its unique image_id."""
-#     image = imagery_collection.find_one({"image_id": image_id}, {"_id": 0})
-#     return image
-
-
-# def get_map(map_id):
-#     """Grab a map from the database using its unique ID."""
-#     map_ = map_collection.find_one({"map_id": map_id}, {"_id": 0})
-#     return map_
-
-
-# def get_maps():
-#     """Grab a map from the database using its unique ID."""
-#     maps = map_collection.find({}, {"_id": 0})
-#     return list(maps)
-
-
-# """LOAD SOME THINGS INTO MEMORY THAT ARE USEFUL THROUGHOUT."""
-# # Load some data that will be used throughout the system.
-# print("> Building truth/image trees")
-# ground_truth = get_ground_truth()
-# ball_trees = {}
-# if len(ground_truth) > 0:
-#     ball_trees["truth"] = build_truth_tree()
-#     ball_trees["image"] = build_image_tree()
-# print("> Complete")

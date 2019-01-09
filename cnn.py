@@ -1,5 +1,6 @@
 """Train a CNN to identify invasive species."""
 from config import *
+from generate_batch import *
 from utils import *
 
 from glob import glob
@@ -10,6 +11,7 @@ from keras.optimizers import Adam
 from keras.layers.normalization import BatchNormalization
 from keras.utils import np_utils
 from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, GlobalAveragePooling2D
+from subprocess import Popen
 from tqdm import tqdm
 
 
@@ -18,18 +20,21 @@ class CNN:
 
     def __init__(
         self,
-        model_name,
+        scientific_name,
         tile_size=128,
-        tiles_per_class=4000,
-        nb_epochs_per_iter=10,
-        nb_iter=100,
+        tiles_per_class=1000,
+        samples_per_tile=10,
+        nb_epochs_per_iter=25,
+        nb_iter=1000,
         load_model=False,
     ):
         """Set up the basic convolutional neural network model."""
-        self.model_name = model_name
+        self.scientific_name = scientific_name
+        self.model_name = model_name = scientific_name.replace(" ", "_")
         self.model_location = f"{MODEL_LOCATION}/{model_name}.h5"
 
         self.tiles_per_class = tiles_per_class
+        self.samples_per_tile = samples_per_tile  # i.e., number rotations per tile
         self.nb_epochs_per_iter = nb_epochs_per_iter
         self.nb_iter = nb_iter
         self.tile_size = tile_size
@@ -77,13 +82,43 @@ class CNN:
         model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["acc"])
         self.model = model
 
-    def train_network(self, target_species_code=28):
+    def train_network(self):
         """Train the neural network."""
-        for itr in tqdm(range(self.nb_iter)):
-            # Grab a subset of the total data.
-            X, y = extract_balanced_tiles(
-                "data/annotated_images.dat", target_species_code
+
+        # If no valid batch is present, let's create one before training.
+        invalid_batch = True
+        batch = Vessel("batch.dat")
+        if "scientific_name" in batch.keys:
+            if batch.scientific_name == scientific_name:
+                invalid_batch = False
+        if invalid_batch:
+            batch = create_batch(
+                scientific_name,
+                tiles_per_class=self.tiles_per_class,
+                samples_per_tile=self.samples_per_tile,
             )
+
+        # Train the network.
+        for itr in tqdm(range(self.nb_iter)):
+            # Launch separate process to generate next batch (work in parallel with neural fit).
+            Popen(
+                [
+                    "python",
+                    "generate_batch.py",
+                    "-n",
+                    self.scientific_name,
+                    "-s",
+                    str(self.samples_per_tile),
+                    "-t",
+                    str(self.tiles_per_class),
+                ]
+            )
+
+            # Load the current batch.
+            batch = Vessel("batch.dat")
+            X, y = batch.X, batch.y
+
+            # Fit the network to the current batch of data
             self.model.fit(X, y, epochs=self.nb_epochs_per_iter, validation_split=0.1)
             self.model.save(self.model_location)
 
@@ -91,5 +126,6 @@ class CNN:
 if __name__ == "__main__":
 
     # Instantiate the CNN.
-    cnn = CNN(model_name="phragmites_v1")
-    cnn.train_network(target_species_code=28)  # 28 is code for Phragmites australis...
+    scientific_name = "Frangula alnus"
+    cnn = CNN(scientific_name)
+    cnn.train_network()  # 28 is code for Phragmites australis...

@@ -1,7 +1,6 @@
 """Build tiles for a one vs many CNN classifier."""
 from config import *
 from geo_utils import extract_info
-from squares import *
 from vessel import Vessel
 
 import cv2
@@ -268,6 +267,8 @@ def map_summaries():
 
 def parse_image_id(image_id):
     """Extract info from the image ID."""
+    if image_id is None:
+        return None
     image_id_list = image_id.split("-")
     map_id = "-".join(image_id_list[:-1])
     year = image_id_list[0]
@@ -364,6 +365,8 @@ def extract_tiles(img, row, col, size=128, num_rotations=10, jitter_amplitude=10
     shift_down = row < size / 2
     shift_up = row > rows - size / 2
 
+    #    os.makedirs('New_images')
+
     if shift_right + shift_left + shift_down + shift_up > 0:
         if shift_right:
             col = size / 2
@@ -377,8 +380,8 @@ def extract_tiles(img, row, col, size=128, num_rotations=10, jitter_amplitude=10
         col_high = int(col + size / 2)
         row_low = int(row - size / 2)
         row_high = int(row + size / 2)
-        img_ = img[row_low:row_high, col_low:col_high, :]
-        # images.append(img_)
+        square = img[row_low:row_high, col_low:col_high, :]
+        images.append(square)
 
     elif (
         col < size * np.sqrt(2) / 2
@@ -390,8 +393,8 @@ def extract_tiles(img, row, col, size=128, num_rotations=10, jitter_amplitude=10
         col_high = int(col + size / 2)
         row_low = int(row - size / 2)
         row_high = int(row + size / 2)
-        img_ = img[row_low:row_high, col_low:col_high, :]
-        # images.append(img_)
+        square = img[row_low:row_high, col_low:col_high, :]
+        images.append(square)
 
     else:
         col_low = int(col - np.sqrt(2) * size / 2)
@@ -400,18 +403,17 @@ def extract_tiles(img, row, col, size=128, num_rotations=10, jitter_amplitude=10
         row_high = int(row + np.sqrt(2) * size / 2)
         #        angle_per_iteration = int(360 / num_rotations)
         img_ = img[row_low:row_high, col_low:col_high, :]
+        ctr = int(np.sqrt(2) * size / 2)
+        ctr_plus = int(ctr + size / 2)
+        ctr_minus = int(ctr - size / 2)
 
-    ctr = int(np.sqrt(2) * size / 2)
-    ctr_plus = int(ctr + size / 2)
-    ctr_minus = int(ctr - size / 2)
-
-    for itr in range(num_rotations):
-        rotation_angle = np.random.uniform(0, 360)
-        if rotation_angle > 0:
-            rotated_image = imutils.rotate(img_, rotation_angle)
-        else:
-            rotated_image = img_
-        square = rotated_image[ctr_minus:ctr_plus, ctr_minus:ctr_plus, :]
-        images.append(square)
+        for itr in range(num_rotations):
+            rotation_angle = np.random.uniform(0, 360)
+            if rotation_angle > 0:
+                rotated_image = imutils.rotate(img_, rotation_angle)
+            else:
+                rotated_image = img_
+            square = rotated_image[ctr_minus:ctr_plus, ctr_minus:ctr_plus, :]
+            images.append(square)
 
     return images

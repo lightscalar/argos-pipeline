@@ -1,3 +1,4 @@
+"""Change old-style annotations to new-style annotations."""
 from vessel import *
 
 from ipdb import set_trace as debug

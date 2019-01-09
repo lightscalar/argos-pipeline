@@ -45,9 +45,22 @@ if __name__ == "__main__":
         fig.axes.get_xaxis().set_visible(False)
         fig.axes.get_yaxis().set_visible(False)
 
-    pipeline = [
+    negative_pipeline = [
         {"$sample": {"size": 10000}},
         {"$match": {"scientific_name": {"$ne":  "Frangula alnus"}}},
     ]
+    positive_pipeline = [
+        {"$sample": {"size": 10000}},
+        {"$match": {"scientific_name": "Frangula alnus"}},
+    ]
 
-    samples = list(db.annotations.aggregate(pipeline))
+
+    negative_samples = list(db.annotations.aggregate(negative_pipeline))
+    positive_samples = list(db.annotations.aggregate(positive_pipeline))
+
+    for sample in negative_samples:
+        if sample['scientific_name'] == 'Frangula alnus':
+            debug()
+    for sample in positive_samples:
+        if sample['scientific_name'] != 'Frangula alnus':
+            debug()
