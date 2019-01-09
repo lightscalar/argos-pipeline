@@ -38,11 +38,16 @@ def extract_training_tiles(
     """Extract the tiles to create a training batch."""
     negative_pipeline = [
         {"$sample": {"size": 3 * nb_tiles_per_class}},
-        {"$match": {"scientific_name": {"$ne": scientific_name}}},
+        {
+            "$match": {
+                "scientific_name": {"$ne": scientific_name},
+                "image_id": {"$exists": True},
+            }
+        },
     ]
     positive_pipeline = [
         {"$sample": {"size": 3 * nb_tiles_per_class}},
-        {"$match": {"scientific_name": scientific_name}},
+        {"$match": {"scientific_name": scientific_name, "image_id": {"$exists": True}}},
     ]
     negative_samples = list(db.annotations.aggregate(negative_pipeline))
     positive_samples = list(db.annotations.aggregate(positive_pipeline))

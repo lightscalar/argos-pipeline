@@ -11,6 +11,7 @@ def export_data(path_to_export_file):
     v.ground_truth = db.get_ground_truths()
     v.tiles = db.get_tiles()
     v.maps = db.get_maps()
+    v.imagery = db.get_images()
     v.annotations = db.get_annotations()
     v.save()
 
