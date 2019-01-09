@@ -139,17 +139,20 @@ class CNN:
 
 
 if __name__ == "__main__":
-    # from pylab import imshow, ion, close
-    # ion()
-    # close('all')
+    training = True
 
     # Instantiate the CNN.
     scientific_name = "Frangula alnus"
-    cnn = CNN(scientific_name, do_load_model=True)
-    cnn.train_network()  # 28 is code for Phragmites australis...
+    if training:
+        cnn = CNN(scientific_name, do_load_model=False)
+        cnn.train_network()
+    else:
+        from pylab import imshow, ion, close
 
-    # images = db.get_images()
-    # img = images[2137]
-    # path_to_image = prepend_argos_root(img['path_to_image'])
-    # cnn.set_image(path_to_image)
-
+        ion()
+        close("all")
+        cnn = CNN(scientific_name, do_load_model=True)
+        images = db.get_images()
+        img = images[2137]
+        path_to_image = prepend_argos_root(img["path_to_image"])
+        cnn.set_image(path_to_image)
