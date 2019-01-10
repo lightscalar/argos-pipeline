@@ -32,15 +32,16 @@ class CNN:
         self.scientific_name = scientific_name
         self.model_name = model_name = scientific_name.replace(" ", "_").lower()
         self.model_location = f"{MODEL_LOCATION}/{model_name}.h5"
-
         self.tiles_per_class = tiles_per_class
         self.samples_per_tile = samples_per_tile  # i.e., number rotations per tile
         self.nb_epochs_per_iter = nb_epochs_per_iter
         self.nb_iter = nb_iter
         self.tile_size = tile_size
         if do_load_model and len(glob(self.model_location)) > 0:
+            print('Loading model.')
             self.model = load_model(self.model_location)
         else:
+            print('Building model from scratch.')
             self.build_model()
 
     def build_model(self):
@@ -127,15 +128,16 @@ class CNN:
         self.image = plt.imread(path_to_image)
         self.image_height, self.image_width, _ = self.image.shape
 
-    def predict(self, alpha, beta, tile_size=128):
+    def predict(self, position, tile_size=128):
         """Predict class of tile located at position (alpha, beta)."""
-        row = self.image_width * alpha
-        col = self.image_height * beta
+        alpha, beta = position
+        row = self.image_height * alpha
+        col = self.image_width * beta
         tile = extract_tiles(
             self.image, row, col, size=128, num_rotations=1, jitter_amplitude=0
         )
         prob = self.model.predict([tile])
-        return prob, tile
+        return prob[0][0]
 
 
 if __name__ == "__main__":
