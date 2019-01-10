@@ -142,7 +142,8 @@ if __name__ == "__main__":
     training = True
 
     # Instantiate the CNN.
-    scientific_name = "Frangula alnus"
+    # scientific_name = "Frangula alnus"
+    scientific_name = "Phragmites australis subsp australis"
     if training:
         cnn = CNN(scientific_name, do_load_model=False)
         cnn.train_network()
