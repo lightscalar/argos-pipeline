@@ -10,7 +10,6 @@ import imutils
 from ipdb import set_trace as debug
 import numpy as np
 import os
-from osgeo import gdal, osr
 import pylab as plt
 from skimage.io import imread
 import shutil
