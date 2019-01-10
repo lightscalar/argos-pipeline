@@ -264,6 +264,18 @@ def map_summaries():
     return maps
 
 
+def image_location_to_id(image_location):
+    """Convert image location to ID."""
+    location_list = image_location.split("/")
+    image_id = (
+        "-".join(location_list[-7:])
+        .replace("DJI", "IMG")
+        .replace(".JPG", "")
+        .replace("images-", "")
+    )
+    return image_id
+
+
 def parse_image_id(image_id):
     """Extract info from the image ID."""
     if image_id is None:

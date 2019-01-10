@@ -10,7 +10,6 @@ if __name__ == "__main__":
     # Grab a map.
     maps = db.get_maps()
     my_map = maps[4]
-    map_id = my_map["map_id"]
     scientific_name = "Frangula alnus"
     scientific_name = "Phragmites australis subsp australis"
     cnn = CNN(scientific_name, do_load_model=True)
@@ -18,17 +17,17 @@ if __name__ == "__main__":
     # Find images.
     path_to_images = f"{prepend_argos_root(my_map['path_to_images'])}/*.JPG"
     images = glob(path_to_images)
-    v = Vessel(f"{my_map['map_id']}_{cnn.model_name}.dat")
-    if "images" not in v.keys:
-        v.images = {}
+    v = Vessel(f"{my_map['map_id']}_{scientific_name}.dat")
+
+    # Load image.
+    from pylab import imshow, ion, close
+    ion()
+    close("all")
 
     images = sorted(images)
-    for itr, image in enumerate(images):
-        print(f"> Processing image {itr+1:04d} of {len(images):04d}")
-        image_id = image_location_to_id(image)
-
-        # CNN set the image
-        cnn.set_image(image)
+    for image in images
+    # image = plt.imread(images[image_nb])
+        cnn.set_image(images[image_nb])
         pdf = cnn.predict
 
         # Scan image.
@@ -40,18 +39,13 @@ if __name__ == "__main__":
             P = []
             for a in tqdm(alpha):
                 for b in beta:
-                    p = cnn.predict(
-                        [a + 0.005 * np.random.randn(), b + 0.005 * np.random.randn()]
-                    )
+                    p = cnn.predict([a, b])
                     P.append(p)
                     X.append([a, b])
-            v.images[image_id] = {
-                "prob": P,
-                "X": X,
-                "image_id": image_id,
-                "map_id": map_id,
-            }
-            v.save()
+            X_ = [x for p, x in zip(P, X) if p > 0.9]
+            P_ = [p for p, x in zip(P, X) if p > 0.9]
+            tree = spatial.cKDTree(X_)
+            X = []
         else:
             X = []
             P = []
@@ -60,3 +54,14 @@ if __name__ == "__main__":
                 X.extend(X_)
                 P.extend(P_)
             X_, P_ = X, P
+        
+
+    plt.close("all")
+    imshow(image)
+    for p, x in zip(P_, X_):
+        if not MCMC:
+            if p > 0.999 and len(tree.query_ball_point(x, 0.05)) > 2:
+                plt.plot(x[1] * 4000, x[0] * 3000, "ro", alpha=p)
+        else:
+            if p > 0.99:
+                plt.plot(x[1] * 4000, x[0] * 3000, "ro", alpha=p)
