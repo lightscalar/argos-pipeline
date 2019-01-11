@@ -103,10 +103,10 @@ class MapModel:
         lon = self.beta_to_longitude(beta, boundaries_to_use="small_map_boundaries")
         return lat, lon
 
-    def to_alpha_beta(self, lat, lon):
+    def to_alpha_beta(self, lat, lon, boundaries_to_use="small_map_boundaries"):
         """Convert latitude/longitude to alpha/beta."""
-        alpha = self.latitude_to_alpha(lat, boundaries_to_use="small_map_boundaries")
-        beta = self.longitude_to_beta(lon, boundaries_to_use="small_map_boundaries")
+        alpha = self.latitude_to_alpha(lat, boundaries_to_use=boundaries_to_use)
+        beta = self.longitude_to_beta(lon, boundaries_to_use=boundaries_to_use)
         return alpha, beta
 
     def in_map(self, alpha, beta):

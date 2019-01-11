@@ -54,7 +54,7 @@ if __name__ == "__main__":
                 X.extend(X_)
                 P.extend(P_)
             X_, P_ = X, P
-        
+
 
     plt.close("all")
     imshow(image)
