@@ -56,8 +56,8 @@ if __name__ == "__main__":
                 )
         # Package up the results.
         v.images[image_id] = {
-            "prob": P,
-            "X": X,
+            "prob": target_probability,
+            "X": image_alpha_beta,
             "image_id": image_id,
             "map_id": map_id,
             "map_alpha_beta": map_alpha_beta,
