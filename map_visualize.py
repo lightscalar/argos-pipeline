@@ -6,8 +6,9 @@ from ipdb import set_trace as debug
 from pylab import imshow, imread, ion, close
 from tqdm import tqdm
 
+
 def process_map(path_to_map_classification):
-    '''Convert classifications to the map coordinate system.'''
+    """Convert classifications to the map coordinate system."""
     v = Vessel(path_to_map_classification)
     keys = list(v.images.keys())
     map_id = image_dict["map_id"]
@@ -27,7 +28,7 @@ def process_map(path_to_map_classification):
             )
     v.map_alpha_beta = map_alpha_beta
     v.save()
-    print('> Map processed.')
+    print("> Map processed.")
 
 
 if __name__ == "__main__":
@@ -52,12 +53,13 @@ if __name__ == "__main__":
         X = v.images[key]["X"]
         P = v.images[key]["prob"]
         map_alpha_beta = []
-        for x in X:
+        for p, x in zip(P, X):
             lat_lon = image_model.to_lat_lon(*x)
             # Use the large map boundaries!
-            map_alpha_beta.append(
-                map_model.to_alpha_beta(*lat_lon, boundaries_to_use="map_boundaries")
-            )
+            if p>0.99:
+                map_alpha_beta.append(
+                    map_model.to_alpha_beta(*lat_lon, boundaries_to_use="map_boundaries")
+                )
     v.map_alpha_beta = map_alpha_beta
     v.save()
 

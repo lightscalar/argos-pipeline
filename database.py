@@ -32,6 +32,77 @@ def extract_tiles_from_annotation(annotation, samples_per_tile):
     return tiles
 
 
+def get_specified_target(scientific_name, positive_target=True, nb_annotations=1000):
+    """Return the number of samples."""
+    annotations = np.array(
+        list(
+            db.annotations.find(
+                {"scientific_name": scientific_name, "image_id": {"$exists": True}}
+            )
+        )
+    )
+    ridx = np.arange(len(annotations))
+    np.random.shuffle(ridx)
+    return list(annotations[ridx])[:nb_annotations]
+
+
+def smart_batch(
+    scientific_name, tile_size=128, nb_tiles_per_class=1000, samples_per_tile=10
+):
+    """Generate a smart batch that balances the target against a mix of its confusors."""
+    # Extract tiles associated with the primary target.
+    X, y = extract_smart_training_tiles(
+        scientific_name,
+        label=1,
+        tile_size=tile_size,
+        nb_tiles_per_class=nb_tiles_per_class,
+        samples_per_tile=samples_per_tile,
+    )
+    # Now extract tiles from each of the confusing classes.
+    confusors = CONFUSORS[scientific_name]
+    nb_tiles_per_confusor = int(nb_tiles_per_class / len(confusors))
+    for confusor in confusors:
+        X_, y_ = extract_smart_training_tiles(
+            confusor,
+            label=0,
+            tile_size=tile_size,
+            nb_tiles_per_class=nb_tiles_per_confusor,
+            samples_per_tile=samples_per_tile,
+        )
+        if X_ is not None:
+            X = np.vstack((X, X_))
+            y = np.hstack((y, y_))
+    return X, y
+
+
+def extract_smart_training_tiles(
+    scientific_name,
+    label=0,
+    tile_size=128,
+    nb_tiles_per_class=1000,
+    samples_per_tile=10,
+):
+    """Sample tiles from possible confusors of the training target."""
+    X = []
+    y = []
+    # Add positive targets.
+    valid_annotations = get_specified_target(
+        scientific_name, nb_annotations=nb_tiles_per_class
+    )
+    if len(valid_annotations) == 0:
+        return None, None
+    samples_per_tile = np.max((int(nb_tiles_per_class / len(valid_annotations)), 10))
+    print("> Extracting targets.")
+    for annot in tqdm(valid_annotations):
+        X_ = extract_tiles_from_annotation(annot, samples_per_tile=samples_per_tile)
+        if len(X_) > 0:
+            X.extend(X_)
+            y.extend([label] * len(X_))
+            if len(X) > nb_tiles_per_class:
+                break
+    return np.array(X), np.array(y)
+
+
 def extract_training_tiles(
     scientific_name, tile_size=128, nb_tiles_per_class=1000, samples_per_tile=100
 ):
@@ -108,11 +179,11 @@ class Database:
             [("annotation_id", pymongo.ASCENDING)], unique=True
         )
         self.annotations.create_index([("scientific_name", pymongo.ASCENDING)])
-        if self.imagery.count() > 0:
+        if self.imagery.count_documents({}) > 0:
             self.build_image_tree()
-        if self.tiles.count() > 0:
+        if self.tiles.count_documents({}) > 0:
             self.build_tile_tree()
-        if self.ground_truths.count() > 0:
+        if self.ground_truths.count_documents({}) > 0:
             self.build_truth_tree()
 
     def get_tile(self, tile_id):

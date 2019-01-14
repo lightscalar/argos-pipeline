@@ -7,6 +7,36 @@ from glob import glob
 user = getpass.getuser()
 EPSG = 4326
 
+# Define confusors.
+CONFUSORS = {}
+CONFUSORS["Frangula alnus"] = [
+    "Achillea millifolium",
+    "Andropogan gerardii",
+    "Animal generalis",
+    "Antus_Moundus",
+    "Calamagrostis canadensis",
+    "Carex",
+    "Cornus",
+    "Cuscuta_gronovii",
+    "Joshua floristis",
+    "Leafy litteris",
+    "Liatris spicata",
+    "Matthew pilotis",
+    "Phalaris arundinacea",
+    "Phragmites australis subsp australis",
+    "Populus deltoides",
+    "Populus tremuloides",
+    "Quercus",
+    "Railroadus_gradus",
+    "Rhamnus cathartica",
+    "Rhus aromatica",
+    "Solidago",
+    "Spartina pectinata",
+    "Verbascum thapsus",
+    "Vernonia_missurica",
+    "Veronicastrum virginicum",
+]
+
 # Determine location of image data based on current user.
 if user == "mjl":
     ARGOS_ROOT = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/ARGOS"
