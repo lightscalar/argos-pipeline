@@ -14,7 +14,6 @@ from pymongo import MongoClient
 import os
 import re
 from sklearn.neighbors import BallTree
-from tqdm import tqdm
 
 
 def extract_tiles_from_annotation(annotation, samples_per_tile):
@@ -51,6 +50,7 @@ def smart_batch(
 ):
     """Generate a smart batch that balances the target against a mix of its confusors."""
     # Extract tiles associated with the primary target.
+    print("> Extracting targets.")
     X, y = extract_smart_training_tiles(
         scientific_name,
         label=1,
@@ -61,6 +61,7 @@ def smart_batch(
     # Now extract tiles from each of the confusing classes.
     confusors = CONFUSORS[scientific_name]
     nb_tiles_per_confusor = int(nb_tiles_per_class / len(confusors))
+    print("> Extracting confusors.")
     for confusor in confusors:
         X_, y_ = extract_smart_training_tiles(
             confusor,
@@ -96,8 +97,7 @@ def extract_smart_training_tiles(
     if len(valid_annotations) == 0:
         return None, None
     samples_per_tile = np.max((int(nb_tiles_per_class / len(valid_annotations)), 10))
-    print("> Extracting targets.")
-    for annot in tqdm(valid_annotations):
+    for annot in valid_annotations:
         X_ = extract_tiles_from_annotation(annot, samples_per_tile=samples_per_tile)
         if len(X_) > 0:
             X.extend(X_)
