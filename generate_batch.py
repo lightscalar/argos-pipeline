@@ -8,11 +8,7 @@ def create_batch(scientific_name, tiles_per_class, samples_per_tile):
     """Create a batch and save to the disk."""
     # Generate some samples.
     print("> Please wait: creating fresh batch.")
-    X, y = extract_training_tiles(
-        scientific_name,
-        nb_tiles_per_class=tiles_per_class,
-        samples_per_tile=samples_per_tile,
-    )
+    X, y = smart_batch(scientific_name)
 
     # Save the batch to the disk.
     v = Vessel("batch.dat")
@@ -39,7 +35,7 @@ if __name__ == "__main__":
         "-s",
         "--samples_per_tile",
         nargs="?",
-        default=25,
+        default=10,
         type=int,
         help="Number of augmented samples to generate from each annotated tile.",
     )

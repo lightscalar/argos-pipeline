@@ -72,6 +72,10 @@ def smart_batch(
         if X_ is not None:
             X = np.vstack((X, X_))
             y = np.hstack((y, y_))
+    idx = np.arange(X.shape[0])
+    np.random.shuffle(idx)
+    X = X[idx, :]
+    y = y[idx]
     return X, y
 
 

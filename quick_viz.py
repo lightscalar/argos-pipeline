@@ -21,18 +21,23 @@ if __name__ == "__main__":
     v = Vessel("example_batch.dat")
     X, y = v.X, v.y
 
+    targets = np.nonzero(y == 1)[0]
+    confusors = np.nonzero(y == 0)[0]
+
     # Load the example data.
     ion()
     close("all")
 
     figure()
     subplot("221")
-    imshow(X[np.random.randint(1000), :])
+    idx = targets[np.random.randint(1000)]
+    imshow(X[idx, :])
     subplot("222")
-    imshow(X[np.random.randint(1000), :])
+    idx = confusors[np.random.randint(800)]
+    imshow(X[idx, :])
     subplot("223")
-    idx = np.random.randint(800) + 1010
+    idx = confusors[np.random.randint(800)]
     imshow(X[idx, :])
     subplot("224")
-    idx = np.random.randint(800) + 1010
+    idx = confusors[np.random.randint(800)]
     imshow(X[idx, :])
