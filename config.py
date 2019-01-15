@@ -36,6 +36,34 @@ CONFUSORS["Frangula alnus"] = [
     "Vernonia_missurica",
     "Veronicastrum virginicum",
 ]
+CONFUSORS["Phragmites australis subsp australis"] = [
+    "Achillea millifolium",
+    "Andropogan gerardii",
+    "Animal generalis",
+    "Antus_Moundus",
+    "Calamagrostis canadensis",
+    "Carex",
+    "Cornus",
+    "Cuscuta_gronovii",
+    "Frangula alnus",
+    "Joshua floristis",
+    "Leafy litteris",
+    "Liatris spicata",
+    "Matthew pilotis",
+    "Phalaris arundinacea",
+    "Populus deltoides",
+    "Populus tremuloides",
+    "Quercus",
+    "Railroadus_gradus",
+    "Rhamnus cathartica",
+    "Rhus aromatica",
+    "Solidago",
+    "Spartina pectinata",
+    "Verbascum thapsus",
+    "Vernonia_missurica",
+    "Veronicastrum virginicum",
+]
+
 
 # Determine location of image data based on current user.
 if user == "mjl":
