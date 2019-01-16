@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     # Grab a map.
     maps = db.get_maps()
-    my_map = maps[4]
+    my_map = maps[3]
     map_id = my_map["map_id"]
     map_model = MapModel(my_map)
     scientific_name = "Frangula alnus"
@@ -25,14 +25,15 @@ if __name__ == "__main__":
         v.images = {}
 
     images = sorted(images)
-    for itr, image in enumerate(images):
+    for itr, path_to_image in enumerate(images[676:]):
         print(f"> Processing image {itr+1:04d} of {len(images):04d}")
-        image_id = image_location_to_id(image)
+        path_to_image = fix_path_to_image(path_to_image)
+        image_id = image_location_to_id(path_to_image)
         image_dict = db.get_image(image_id)
         image_model = ImageModel(image_dict)
 
         # CNN set the image
-        cnn.set_image(image)
+        cnn.set_image(path_to_image)
         pdf = cnn.predict
 
         # Scan image.
@@ -62,4 +63,6 @@ if __name__ == "__main__":
             "map_id": map_id,
             "map_alpha_beta": map_alpha_beta,
         }
-        v.save()
+        if np.mod(itr,25)==0:
+            v.save()
+    v.save()
