@@ -3,6 +3,8 @@ from database import *
 from cnn import *
 from models import *
 from mcmc import *
+import utils
+
 import scipy.spatial as spatial
 
 
@@ -25,9 +27,10 @@ if __name__ == "__main__":
         v.images = {}
 
     images = sorted(images)
-    for itr, path_to_image in enumerate(images[676:]):
-        print(f"> Processing image {itr+1:04d} of {len(images):04d}")
-        path_to_image = fix_path_to_image(path_to_image)
+    offset = 676 # in case we need to restart; default should be zero
+    for itr, path_to_image in enumerate(images[offset:]):
+        print(f"> Processing image {itr+1+offset:04d} of {len(images):04d}")
+        path_to_image = utils.fix_path_to_image(path_to_image) # for a few problem images
         image_id = image_location_to_id(path_to_image)
         image_dict = db.get_image(image_id)
         image_model = ImageModel(image_dict)
