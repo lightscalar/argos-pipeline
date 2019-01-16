@@ -329,6 +329,25 @@ def parse_map_id(map_id):
         return {"error": "Cannot parse given map ID."}
 
 
+def fix_path_to_image(path_to_image, leading_slash=False):
+    """Convert the path to image to new 1000-based style."""
+    rgx = r"(DJI_)(\d+)"
+    path_list = path_to_image.split("/")
+    image_name = path_list[-1]
+    if len(image_name) > 12:
+        scan = re.search(rgx, image_name)
+        if scan is not None:
+            new_image_number = 1000 + int(scan[2])
+            new_image_name = f"DJI_{new_image_number:04d}.JPG"
+            path_to_images = "/".join(path_list[:-1])
+            path_to_new_image = f"{path_to_images}/{new_image_name}"
+            if leading_slash:
+                path_to_new_image = "/" + path_to_new_image
+    else:
+        path_to_new_image = path_to_image
+    return path_to_new_image
+
+
 def fix_image_filenames(path_to_images):
     """Let's fix the filenames of images for folders with more than 1000 images."""
     images = glob(f"{path_to_images}/*.JPG")

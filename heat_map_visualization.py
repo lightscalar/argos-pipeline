@@ -1,9 +1,12 @@
 """Generate target density maps for specified map."""
 from database import *
 from models import *
+from stores import *
 from vessel import Vessel
 from skimage.io import imread
 from pylab import ion, close, imshow, figure, show, plot
+
+
 
 if __name__ == "__main__":
     # Grab a map.
@@ -13,8 +16,7 @@ if __name__ == "__main__":
     map_model = MapModel(my_map)
     path_to_map = prepend_argos_root(my_map["path_to_geomap"])
     scientific_name = "Frangula alnus"
-    v = Vessel("2018-08-03-st_johns_marsh-66_phragmites_australis_subsp_australis.dat")
-    map_alpha_beta = v.map_alpha_beta
+    print("> Loading map image.")
     map_image = imread(path_to_map)
     height, width, chans = map_image.shape
 
@@ -22,6 +24,19 @@ if __name__ == "__main__":
     close("all")
     figure(figsize=(11, 9))
     imshow(map_image)
+    map_alpha_beta = []
+    probability = []
+    for image_path in tqdm(phrag.images.keys()):
+        image_dict = phrag.images[image_path]
+        map_alpha_beta.extend(image_dict["map_alpha_beta"])
+        probability.extend(image_dict["prob"])
+    probability = np.array(probability)
+    map_alpha_beta = np.array(map_alpha_beta)
+    valid_idx = np.nonzero(probability > 0.999)[0]
+    # valid_idx = np.flip(np.argsort(probability), 0)
+    np.random.shuffle(valid_idx)
 
-    for alpha, beta in map_alpha_beta:
-        plot(beta * width, alpha * height, "ro", alpha=0.6, markersize=5)
+    max_idx = int(8e3)
+    for idx in valid_idx[:max_idx]:
+        alpha, beta = map_alpha_beta[idx]
+        plot(beta * width, alpha * height, "r.", alpha=.15)
