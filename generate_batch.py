@@ -4,7 +4,7 @@ from database import *
 import argparse
 
 
-def create_batch(scientific_name, tiles_per_class, samples_per_tile):
+def create_batch(scientific_name, tiles_per_class=1000, samples_per_tile=100):
     """Create a batch and save to the disk."""
     # Generate some samples.
     print("> Please wait: creating fresh batch.")

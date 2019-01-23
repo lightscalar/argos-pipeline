@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
     # Ensure maps all have a path_to_tiles entry.
-    if False:
+    if True:
         maps = db.get_maps(return_id=True)
         for mp in maps:
             mp["path_to_map_kml"] = mp["path_to_images"].replace(

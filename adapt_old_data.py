@@ -18,11 +18,11 @@ SITE_NAME_MAPPING = {
     "drummond_island_site_1": "drummond_island_alvar",
     "negwegon_site_1": "negwegon_site_1",
     "wilderness_site_2": "wilderness_site_2",
+    "elberta_site_1": "elberta_site_1",
 }
 skip_sites = [
     "obliques",
     "ludiongton_site_1b",
-    "elberta_site_1",
     "warren_dunes_site_2",
     "ludington_site_1",
     "warren_dunes_site_1",
@@ -117,6 +117,6 @@ if __name__ == "__main__":
         new_annotations.extend(convert_old_annotation(annotation))
 
     # Save these converted annotations for import into appropriate database.
-    v_transform = Vessel("data/2019.01.07_legacy_annotations.dat")
+    v_transform = Vessel("data/2019.01.23_update_annotations_with_elberta.dat")
     v_transform.annotations = new_annotations
     v_transform.save()

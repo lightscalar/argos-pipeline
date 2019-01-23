@@ -222,11 +222,11 @@ def map_summaries():
                                 # Get map sizes.
                                 if len(glob(path_to_geomap)) == 0:
                                     continue
-                                ds = gdal.Open(path_to_geomap)
-                                geo_rows = ds.RasterYSize
-                                geo_cols = ds.RasterXSize
-                                small_map = plt.imread(path_to_map)
-                                small_rows, small_cols, _ = small_map.shape
+                                # ds = gdal.Open(path_to_geomap)
+                                # geo_rows = ds.RasterYSize
+                                # geo_cols = ds.RasterXSize
+                                # small_map = plt.imread(path_to_map)
+                                # small_rows, small_cols, _ = small_map.shape
                             else:
                                 continue  # No images? Don't return this map.
                             if len(glob(f"{altitude}/maps/map.tif")) > 0:
@@ -239,12 +239,12 @@ def map_summaries():
                                         "site": sitename,
                                         "altitude": alt,
                                         "nb_images": nb_images,
-                                        "geo_rows": geo_rows,
-                                        "geo_cols": geo_cols,
-                                        "small_rows": small_rows,
-                                        "small_cols": small_cols,
-                                        "lat": f"{first_meta['img_lat']:.4f}",
-                                        "lon": f"{first_meta['img_lon']:.4f}",
+                                        # "geo_rows": geo_rows,
+                                        # "geo_cols": geo_cols,
+                                        # "small_rows": small_rows,
+                                        # "small_cols": small_cols,
+                                        # "lat": f"{first_meta['img_lat']:.4f}",
+                                        # "lon": f"{first_meta['img_lon']:.4f}",
                                         "start": start,
                                         "end": end,
                                         "time": time_str.replace("-", ":"),

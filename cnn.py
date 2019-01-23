@@ -38,10 +38,10 @@ class CNN:
         self.nb_iter = nb_iter
         self.tile_size = tile_size
         if do_load_model and len(glob(self.model_location)) > 0:
-            print('Loading model.')
+            print("Loading model.")
             self.model = load_model(self.model_location)
         else:
-            print('Building model from scratch.')
+            print("Building model from scratch.")
             self.build_model()
 
     def build_model(self):
@@ -141,21 +141,20 @@ class CNN:
 
 
 if __name__ == "__main__":
-    training = True
+    training = False
 
     # Instantiate the CNN.
-    # scientific_name = "Frangula alnus"
-    scientific_name = "Phragmites australis subsp australis"
+    scientific_name = "Frangula alnus"
+    # scientific_name = "Phragmites australis subsp australis"
     if training:
         cnn = CNN(scientific_name, do_load_model=False)
         cnn.train_network()
     else:
         from pylab import imshow, ion, close
-
-        ion()
-        close("all")
+        # ion()
+        # close("all")
         cnn = CNN(scientific_name, do_load_model=True)
-        images = db.get_images()
-        img = images[2137]
-        path_to_image = prepend_argos_root(img["path_to_image"])
-        cnn.set_image(path_to_image)
+        # images = db.get_images()
+        # img = images[2137]
+        # path_to_image = prepend_argos_root(img["path_to_image"])
+        # cnn.set_image(path_to_image)
