@@ -26,8 +26,8 @@ def import_annotations(path_to_import_file):
         print("> Existing annotations were not inserted.")
 
 
-def import_annotations(path_to_import_file):
-    """Import annotations to the MongoDB."""
+def import_maps(path_to_import_file):
+    """Import maps to the MongoDB."""
     # Import annotations.
     v = Vessel(path_to_import_file)
     try:  # to import all; some may fail, but the rest will be inserted.
