@@ -18,8 +18,9 @@ from sklearn.neighbors import BallTree
 
 def extract_tiles_from_annotation(annotation, samples_per_tile):
     """Open up an image and extract tiles."""
-    image_dict = parse_image_id(annotation["image_id"])
-    try:  # directory may not exist...
+    image_id = fix_image_id(annotation["image_id"])
+    image_dict = parse_image_id(image_id)
+    try:  # directory may not exist... maps not uploaded yet, e.g.
         image = plt.imread(prepend_argos_root(image_dict["path_to_image"]))
     except:
         return []
@@ -71,8 +72,11 @@ def smart_batch(
             samples_per_tile=samples_per_tile,
         )
         if X_ is not None:
-            X = np.vstack((X, X_))
-            y = np.hstack((y, y_))
+            try:
+                X = np.vstack((X, X_))
+                y = np.hstack((y, y_))
+            except:
+                debug()
     idx = np.arange(X.shape[0])
     np.random.shuffle(idx)
     X = X[idx, :]
@@ -97,6 +101,7 @@ def extract_smart_training_tiles(
     if len(valid_annotations) == 0:
         return None, None
     samples_per_tile = np.max((int(nb_tiles_per_class / len(valid_annotations)), 10))
+    samples_per_tile = np.min((samples_per_tile, 5))
     for annot in valid_annotations:
         X_ = extract_tiles_from_annotation(annot, samples_per_tile=samples_per_tile)
         if len(X_) > 0:
@@ -104,6 +109,8 @@ def extract_smart_training_tiles(
             y.extend([label] * len(X_))
             if len(X) > nb_tiles_per_class:
                 break
+    if len(X) == 0:
+        return None, None
     return np.array(X), np.array(y)
 
 

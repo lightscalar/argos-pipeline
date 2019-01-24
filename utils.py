@@ -329,6 +329,23 @@ def parse_map_id(map_id):
         return {"error": "Cannot parse given map ID."}
 
 
+def fix_image_id(image_id):
+    """Fix image ID — adjust to new 1000-based style."""
+    image_id_list = image_id.split("-")
+    image_name = image_id_list[-1]
+    rgx = r"(IMG_)(\d+)"
+    if len(image_name) > 8:
+        scan = re.search(rgx, image_name)
+        if scan is not None:
+            new_image_number = 1000 + int(scan[2])
+            new_name = f"IMG_{new_image_number:04d}"
+            new_image_id = "-".join(image_id_list[:-1])
+            new_image_id = f"{new_image_id}-{new_name}"
+    else:
+        new_image_id = image_id
+    return new_image_id
+
+
 def fix_path_to_image(path_to_image, leading_slash=False):
     """Convert the path to image to new 1000-based style."""
     rgx = r"(DJI_)(\d+)"

@@ -18,7 +18,7 @@ from pylab import (
 if __name__ == "__main__":
 
     # Load the example data.
-    v = Vessel("example_batch.dat")
+    v = Vessel("batch.dat")
     X, y = v.X, v.y
 
     targets = np.nonzero(y == 1)[0]
