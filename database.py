@@ -109,7 +109,7 @@ def extract_smart_training_tiles(
             y.extend([label] * len(X_))
             if len(X) > nb_tiles_per_class:
                 break
-    if len(X) == 0:
+    if len(X) == 0:  # No image was available to extract tiles.
         return None, None
     return np.array(X), np.array(y)
 

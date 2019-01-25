@@ -121,35 +121,19 @@ def transparent_cmap(cmap, N=255):
 if __name__ == "__main__":
     # Grab a map.
     # target = "JUL"
-    target = "AUG"
+    # target = "AUG"
+    target = "elberta_centaurea_06"
     maps = db.get_maps()
-    if target == "JUL":
-        map_dict = maps[3]
+    if target == "frangula_st_johns_07":
+        map_dict = maps[5]
         map_data = frangula_07
-    else:
-        map_dict = maps[4]
+    elif target == "frangula_st_johns_08":
+        map_dict = maps[6]
         map_data = frangula_08
+    elif target == "elberta_centaurea_06":
+        map_dict = maps[3]
+        map_data = elberta_centaurea_06
 
+    # Construct a heatmap object and plot the density.
     hm = HeatMap(map_dict, map_data)
     hm.plot_density()
-
-    # ion()
-    # close("all")
-    # figure(figsize=(11, 9))
-    # imshow(map_image)
-    # map_alpha_beta = []
-    # probability = []
-    # for image_path in map_data.images.keys():
-    #     image_dict = map_data.images[image_path]
-    #     map_alpha_beta.extend(image_dict["map_alpha_beta"])
-    #     probability.extend(image_dict["prob"])
-    # probability = np.array(probability)
-    # map_alpha_beta = np.array(map_alpha_beta)
-    # valid_idx = np.nonzero(probability > 0.999)[0]
-    # # valid_idx = np.flip(np.argsort(probability), 0)
-    # np.random.shuffle(valid_idx)
-
-    # max_idx = int(9e3)
-    # for idx in valid_idx[:max_idx]:
-    #     alpha, beta = map_alpha_beta[idx]
-    #     plot(beta * width, alpha * height, "r.", alpha=.05)

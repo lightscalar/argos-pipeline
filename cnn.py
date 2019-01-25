@@ -144,7 +144,8 @@ if __name__ == "__main__":
     training = False
 
     # Instantiate the CNN.
-    scientific_name = "Frangula alnus"
+    # scientific_name = "Frangula alnus"
+    scientific_name = "Centaurea stoebe"
     # scientific_name = "Phragmites australis subsp australis"
     if training:
         cnn = CNN(scientific_name, do_load_model=False)

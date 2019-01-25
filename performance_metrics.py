@@ -141,6 +141,8 @@ if __name__ == "__main__":
 
     # Generate a ROC curve for these guys.
     scientific_name = "Frangula alnus"
+    # scientific_name = "Centaurea stoebe"
+    # scientific_name = "Phragmites australis subsp australis"
     roc = ROC(scientific_name)
     tps, fps, thresholds = roc.calculate_roc()
     auc = roc.auc()
@@ -157,5 +159,5 @@ if __name__ == "__main__":
     xlabel("False Positive Rate")
     ylabel("True Positive Rate")
     plt.axis("equal")
-    plt.title(f"AUC = {auc*100:.1f}%")
+    plt.title(f"{scientific_name} — AUC = {auc*100:.1f}%")
     plt.savefig(f"imgs/AUC_{scientific_name}.png")

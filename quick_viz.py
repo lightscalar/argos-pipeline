@@ -1,3 +1,4 @@
+"""Quickly visualize the current batch of training data."""
 from vessel import Vessel
 import numpy as np
 from pylab import (
@@ -27,17 +28,18 @@ if __name__ == "__main__":
     # Load the example data.
     ion()
     close("all")
+    max_confusors = 600
 
     figure()
     subplot("221")
     idx = targets[np.random.randint(1000)]
     imshow(X[idx, :])
     subplot("222")
-    idx = confusors[np.random.randint(800)]
+    idx = confusors[np.random.randint(max_confusors)]
     imshow(X[idx, :])
     subplot("223")
-    idx = confusors[np.random.randint(800)]
+    idx = confusors[np.random.randint(max_confusors)]
     imshow(X[idx, :])
     subplot("224")
-    idx = confusors[np.random.randint(800)]
+    idx = confusors[np.random.randint(max_confusors)]
     imshow(X[idx, :])

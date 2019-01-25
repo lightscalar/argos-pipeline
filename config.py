@@ -167,6 +167,28 @@ CONFUSORS["Leymus arenarius"] = [
     "Toxicodendron radicans",
 ]
 
+CONFUSORS["Typha angustifolia"] = [
+    "Calamagrostis canadensis",
+    "Carex",
+    "Carex lasiocarpa",
+    "Cladium marisicoides",
+    "Dasiphora fruticosa",
+    "Dulichium arundinaceum",
+    "Gypsophila paniculata",
+    "H2O",
+    "Hydrocharis morsus-ranae",
+    "Joshua floristis",
+    "Juncus balticus",
+    "Leafy litteris",
+    "Lythrum salicaria",
+    "Matthew pilotis",
+    "Phalaris arundinacea",
+    "Phragmites australis subsp americanus",
+    "Phragmites australis subsp australis",
+    "Schoenoplectus acutus",
+    "Schoenoplectus pungens",
+    "Thuja occidentalis",
+]
 
 # Determine location of image data based on current user.
 if user == "mjl":
