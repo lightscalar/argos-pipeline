@@ -249,6 +249,29 @@ CONFUSORS["Typha angustifolia"] = [
     "Thuja occidentalis",
 ]
 
+CONFUSORS["Hydrocharis morsus-ranae"] = [
+    "Calamagrostis canadensis",
+    "Carex",
+    "Typha angustifolia",
+    "Carex lasiocarpa",
+    "Cladium marisicoides",
+    "Dasiphora fruticosa",
+    "Dulichium arundinaceum",
+    "Gypsophila paniculata",
+    "H2O",
+    "Joshua floristis",
+    "Juncus balticus",
+    "Leafy litteris",
+    "Lythrum salicaria",
+    "Matthew pilotis",
+    "Phalaris arundinacea",
+    "Phragmites australis subsp americanus",
+    "Phragmites australis subsp australis",
+    "Schoenoplectus acutus",
+    "Schoenoplectus pungens",
+    "Thuja occidentalis",
+]
+
 # Determine location of image data based on current user.
 if user == "mjl":
     ARGOS_ROOT = "/Users/mjl/Dropbox (Personal)/MAC/DEPOT/ARGOS"
