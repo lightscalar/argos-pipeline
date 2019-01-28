@@ -1,8 +1,10 @@
 from cnn import *
+from config import *
 from generate_batch import *
 from vessel import Vessel
 
 import numpy as np
+from tqdm import tqdm
 
 
 class ROC:
@@ -132,6 +134,54 @@ class ROC:
         sensitivity = tps / (tps + fns)
         specificity = tns / (tns + fps)
         return sensitivity, specificity
+
+
+class ConfusionMatrix:
+    """Create a confusion matrix for a given list of target species."""
+
+    def __init__(self, target_species=TARGET_SPECIES, load_vessel=False):
+        """Specific the list of scientific names of interest."""
+        # Specify the target species for the confusion matrix.
+        self.target_species = target_species
+
+        # Load data for each target species.
+        if load_vessel:
+            v = Vessel("confusion.dat")
+            self.X = v.X
+            self.y = v.y
+        else:
+            self.load_targets()
+
+    def classify_tiles(self):
+        """Classify all the tiles."""
+        scores = {}
+        for scientific_name in self.target_species:
+            cnn = CNN(scientific_name, do_load_model=True)
+            scores[scientific_name] = cnn.model.predict(np.array(cm.X))
+        self.scores = scores
+        cm = Vessel('confusion_matrix.dat')
+        cm.scores = scores
+        cm.save()
+
+    def load_targets(self):
+        """Load example targets."""
+        y = []
+        X = []
+        print("> Assembling the data.")
+        for scientific_name in tqdm(self.target_species):
+            annotations = get_specified_target(scientific_name, nb_annotations=100)
+            for annotation in tqdm(annotations):
+                X_ = extract_tiles_from_annotation(annotation, 10)
+                X.extend(X_)
+                y_ = [scientific_name] * len(X_)
+                y.extend(y_)
+        self.X = X
+        self.y = y
+        print("> Assembly complete.")
+        c = Vessel("confusion_matrix.dat")
+        c.X = X
+        c.y = y
+        c.save()
 
 
 if __name__ == "__main__":

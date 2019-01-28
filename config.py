@@ -7,6 +7,17 @@ from glob import glob
 user = getpass.getuser()
 EPSG = 4326
 
+TARGET_SPECIES = [
+    "Centaurea stoebe",
+    "Phragmites australis subsp australis",
+    "Phragmites australis subsp americanus",
+    "Frangula alnus",
+    "Rhamnus cathartica",
+    "Leymus arenarius",
+    "Hydrocharis morsus-ranae",
+    "Typha angustifolia",
+]
+
 # Define confusors.
 CONFUSORS = {}
 CONFUSORS["Frangula alnus"] = [
