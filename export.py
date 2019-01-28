@@ -16,6 +16,14 @@ def export_data(path_to_export_file):
     v.save()
 
 
+def export_annotations(path_to_export_file):
+    """Export annotations!"""
+    v = Vessel(path_to_export_file)
+    print(f"> Saving data to {path_to_export_file}")
+    v.annotations = db.get_annotations()
+    v.save()
+
+
 def import_annotations(path_to_import_file):
     """Import annotations to the MongoDB."""
     # Import annotations.
