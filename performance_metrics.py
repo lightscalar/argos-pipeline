@@ -146,20 +146,24 @@ class ConfusionMatrix:
 
         # Load data for each target species.
         if load_vessel:
-            v = Vessel("confusion.dat")
-            self.X = v.X
-            self.y = v.y
+            v = Vessel("confusion_matrix.dat")
+            try:
+                self.X = np.array(v.X)
+                self.y = np.array(v.y)
+                self.scores = v.scores
+            except:
+                self.load_targets()
         else:
             self.load_targets()
 
     def classify_tiles(self):
         """Classify all the tiles."""
         scores = {}
-        for scientific_name in self.target_species:
+        for scientific_name in tqdm(self.target_species):
             cnn = CNN(scientific_name, do_load_model=True)
-            scores[scientific_name] = cnn.model.predict(np.array(cm.X))
+            scores[scientific_name] = cnn.model.predict(self.X)
         self.scores = scores
-        cm = Vessel('confusion_matrix.dat')
+        cm = Vessel("confusion_matrix.dat")
         cm.scores = scores
         cm.save()
 
@@ -189,25 +193,37 @@ if __name__ == "__main__":
     import pylab as plt
     import seaborn as sns
 
-    # Generate a ROC curve for these guys.
-    scientific_name = "Frangula alnus"
-    # scientific_name = "Centaurea stoebe"
-    # scientific_name = "Phragmites australis subsp australis"
-    roc = ROC(scientific_name)
-    tps, fps, thresholds = roc.calculate_roc()
-    auc = roc.auc()
+    cm = ConfusionMatrix(load_vessel=True)
+    scores = cm.scores
+    y = cm.y
+    targets = sorted(np.unique(list(scores.keys())))
 
-    ion()
-    close("all")
-    figure(figsize=(10, 8))
-    sns.set_context("poster")
-    plot(fps, tps)
-    plt.fill_between(fps, tps, np.zeros_like(tps), alpha=0.3)
-    plt.grid(True)
-    xlim([0, 1.05])
-    ylim([0, 1.05])
-    xlabel("False Positive Rate")
-    ylabel("True Positive Rate")
-    plt.axis("equal")
-    plt.title(f"{scientific_name} — AUC = {auc*100:.1f}%")
-    plt.savefig(f"imgs/AUC_{scientific_name}.png")
+    confusion_matrix = np.zeros((8, 8))
+    for outer, scientific_name_outer in enumerate(targets):
+        library_scores = np.array(scores[scientific_name_outer])
+        for inner, scientific_name_inner in enumerate(targets):
+            idx = np.nonzero(y == scientific_name_inner)[0]
+            confusion_matrix[outer, inner] = library_scores[idx].mean()
+
+    # Generate a ROC curve for these guys.
+    # scientific_name = "Frangula alnus"
+    # # scientific_name = "Centaurea stoebe"
+    # # scientific_name = "Phragmites australis subsp australis"
+    # roc = ROC(scientific_name)
+    # tps, fps, thresholds = roc.calculate_roc()
+    # auc = roc.auc()
+
+    # ion()
+    # close("all")
+    # figure(figsize=(10, 8))
+    # sns.set_context("poster")
+    # plot(fps, tps)
+    # plt.fill_between(fps, tps, np.zeros_like(tps), alpha=0.3)
+    # plt.grid(True)
+    # xlim([0, 1.05])
+    # ylim([0, 1.05])
+    # xlabel("False Positive Rate")
+    # ylabel("True Positive Rate")
+    # plt.axis("equal")
+    # plt.title(f"{scientific_name} — AUC = {auc*100:.1f}%")
+    # plt.savefig(f"imgs/AUC_{scientific_name}.png")
