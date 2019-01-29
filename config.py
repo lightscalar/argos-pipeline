@@ -101,6 +101,7 @@ CONFUSORS["Phragmites australis subsp australis"] = [
     "Rhus aromatica",
     "Solidago",
     "Spartina pectinata",
+    "Typha angustifolia",
     "Verbascum thapsus",
     "Vernonia_missurica",
     "Veronicastrum virginicum",
@@ -130,6 +131,7 @@ CONFUSORS["Phragmites australis subsp americanus"] = [
     "Rhus aromatica",
     "Solidago",
     "Spartina pectinata",
+    "Typha angustifolia",
     "Verbascum thapsus",
     "Vernonia_missurica",
     "Veronicastrum virginicum",
@@ -258,6 +260,7 @@ CONFUSORS["Typha angustifolia"] = [
     "Schoenoplectus acutus",
     "Schoenoplectus pungens",
     "Thuja occidentalis",
+    "Typha angustifolia",
 ]
 
 CONFUSORS["Hydrocharis morsus-ranae"] = [
