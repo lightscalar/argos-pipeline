@@ -187,43 +187,77 @@ class ConfusionMatrix:
         c.y = y
         c.save()
 
+    def plot_confusion_matrix(self):
+        """Plot a nice confusion matrix."""
+        from pylab import ion, close, figure, plot, xlabel, ylabel, ylim, xlim, imshow
+        import pylab as plt
+        import seaborn as sns
+        from sklearn.metrics import confusion_matrix as c_matrix
+
+        # Find the scores.
+        scores = self.scores
+        y = self.y
+        targets = sorted(np.unique(list(scores.keys())))
+        confusion_matrix = np.zeros((8, 8))
+        for outer, scientific_name_outer in enumerate(targets):
+            library_scores = np.array(scores[scientific_name_outer])
+            for inner, scientific_name_inner in enumerate(targets):
+                idx = np.nonzero(y == scientific_name_inner)[0]
+                confusion_matrix[outer, inner] = library_scores[idx].mean()
+        name_maps = {}
+        name_maps["Centaurea stoebe"] = "Spotted Knapweed"
+        name_maps["Frangula alnus"] = "Glossy Buckthorn"
+        name_maps["Hydrocharis morsus-ranae"] = "Frog's Bit"
+        name_maps["Leymus arenarius"] = "Lyme Grass"
+        name_maps["Phragmites australis subsp australis"] = "Phragmites (Invasive)"
+        name_maps["Phragmites australis subsp americanus"] = "Phragmites (Native)"
+        name_maps["Rhamnus cathartica"] = "Common Buckthorn"
+        name_maps["Typha angustifolia"] = "Narrow-leaved Cattail"
+
+        ion()
+        close("all")
+        sns.set_context("poster")
+        figure(figsize=(22, 15))
+        plt.imshow(confusion_matrix, cmap=plt.cm.viridis)
+        plt.colorbar()
+        ntargets = [name_maps[t] for t in targets]
+        tick_marks = np.arange(len(targets))
+        plt.xticks(tick_marks, ntargets, rotation=45)
+        plt.yticks(tick_marks, ntargets, rotation=45)
+        # xlabel("Predicted Targets")
+        # ylabel("True Targets")
+        plt.savefig("imgs/confusion_matrix.png")
+        close("all")
+
 
 if __name__ == "__main__":
-    from pylab import ion, close, figure, plot, xlabel, ylabel, ylim, xlim
+    from pylab import ion, close, figure, plot, xlabel, ylabel, ylim, xlim, imshow
     import pylab as plt
     import seaborn as sns
+    from sklearn.metrics import confusion_matrix as c_matrix
 
-    cm = ConfusionMatrix(load_vessel=True)
-    scores = cm.scores
-    y = cm.y
-    targets = sorted(np.unique(list(scores.keys())))
-
-    confusion_matrix = np.zeros((8, 8))
-    for outer, scientific_name_outer in enumerate(targets):
-        library_scores = np.array(scores[scientific_name_outer])
-        for inner, scientific_name_inner in enumerate(targets):
-            idx = np.nonzero(y == scientific_name_inner)[0]
-            confusion_matrix[outer, inner] = library_scores[idx].mean()
+    # cm = ConfusionMatrix(load_vessel=True)
+    # cm.plot_confusion_matrix()
 
     # Generate a ROC curve for these guys.
     # scientific_name = "Frangula alnus"
-    # # scientific_name = "Centaurea stoebe"
-    # # scientific_name = "Phragmites australis subsp australis"
-    # roc = ROC(scientific_name)
-    # tps, fps, thresholds = roc.calculate_roc()
-    # auc = roc.auc()
+    scientific_name = "Centaurea stoebe"
+    # scientific_name = "Phragmites australis subsp australis"
+    roc = ROC(scientific_name)
+    tps, fps, thresholds = roc.calculate_roc()
+    auc = roc.auc()
 
-    # ion()
-    # close("all")
-    # figure(figsize=(10, 8))
-    # sns.set_context("poster")
-    # plot(fps, tps)
-    # plt.fill_between(fps, tps, np.zeros_like(tps), alpha=0.3)
-    # plt.grid(True)
-    # xlim([0, 1.05])
-    # ylim([0, 1.05])
-    # xlabel("False Positive Rate")
-    # ylabel("True Positive Rate")
-    # plt.axis("equal")
-    # plt.title(f"{scientific_name} — AUC = {auc*100:.1f}%")
-    # plt.savefig(f"imgs/AUC_{scientific_name}.png")
+    ion()
+    close("all")
+    figure(figsize=(10, 8))
+    sns.set_context("poster")
+    plot(fps, tps)
+    plt.fill_between(fps, tps, np.zeros_like(tps), alpha=0.3)
+    plt.grid(True)
+    xlim([0, 1.05])
+    ylim([0, 1.05])
+    xlabel("False Positive Rate")
+    ylabel("True Positive Rate")
+    plt.axis("equal")
+    plt.title(f"{scientific_name} — AUC = {auc*100:.1f}%")
+    plt.savefig(f"imgs/AUC_{scientific_name}.png")
